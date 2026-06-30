@@ -40,4 +40,4 @@ Status
 In active use. Roadmap includes Instagram DM support and a lightweight clinic dashboard.
 
 
-Built by Eyad — Ai Engineer and Data Scientist.
+Built by Eyad — AI Engineer and Data Scientist.
