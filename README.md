@@ -90,5 +90,5 @@ Live in production at MeroSculp Clinic. Real patients, real bookings, real opera
 
 ---
 
-**Eyad Nada** — Data Science student, GIU Cairo. Building real automation and data systems for real businesses.
+**Eyad Nada** — an aspiring Data Scientist and AI Engineer, GIU Cairo. Building real automation and data systems for real businesses.
 [GitHub](https://github.com/EyadNada) · Open to internships and freelance work in data/AI engineering.
