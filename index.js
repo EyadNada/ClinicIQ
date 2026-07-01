@@ -144,7 +144,7 @@ async function handleMessage(msg) {
   if (msg.type !== 'chat') return
 
   // TESTING MODE — only respond to this number
-  const ALLOWED = ['201501061511@c.us']
+  const ALLOWED = ['201558533440@c.us']
   if (!ALLOWED.includes(msg.from)) return
 
   const sender = msg.from
