@@ -20,5 +20,16 @@ async function saveBooking(data, rowNumber) {
     console.error('❌ n8n webhook error:', err.message)
   }
 }
+async function checkSlot(day, time) {
+  try {
+    const response = await axios.get('https://cliniciq.app.n8n.cloud/webhook/check-GLOBAL-slot', {
+      params: { day, time }
+    })
+    return response.data.available
+  } catch (err) {
+    console.error('❌ Clash check error:', err.message)
+    return true // if check fails, allow booking to continue
+  }
+}
 
-module.exports = { saveBooking }
+module.exports = { saveBooking, checkSlot }

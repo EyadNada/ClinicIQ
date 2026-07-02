@@ -2,7 +2,7 @@ let bookingCount = 1
 
 const { Client, LocalAuth } = require('whatsapp-web.js')
 const qrcode = require('qrcode-terminal')
-const { saveBooking } = require('./notify')
+const { saveBooking, checkSlot } = require('./notify')
 
 const client = new Client({
   authStrategy: new LocalAuth(),
@@ -142,9 +142,10 @@ async function handleMessage(msg) {
   if (msg.from.endsWith('@g.us')) return
   if (msg.from === 'status@broadcast') return
   if (msg.type !== 'chat') return
+  //console.log('📞 Incoming from:', msg.from)
 
   // TESTING MODE — only respond to this number
-  const ALLOWED = ['201558533440@c.us']
+  const ALLOWED = ['201558533440@c.us', '214830002753718@lid']
   if (!ALLOWED.includes(msg.from)) return
 
   const sender = msg.from
@@ -222,6 +223,13 @@ async function handleMessage(msg) {
     if (text === '0') { session.step = 'select_day'; return await msg.reply(DAYS_MENU) }
     if (CLINIC.slots[text]) {
       session.data.time = CLINIC.slots[text]
+
+      // Check for clashes before proceeding
+      const available = await checkSlot(session.data.day, session.data.time)
+      if (!available) {
+        return await msg.reply(`❌ Sorry, *${session.data.day}* at *${session.data.time}* is already booked.\n\nPlease choose another time:\n\n` + SLOTS_MENU)
+      }
+
       session.step = 'enter_name'
       return await msg.reply('✏️ *What is your full name?*')
     }
