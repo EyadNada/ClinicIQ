@@ -4,3 +4,4 @@ node_modules/
 auth/
 .env
 credentials.json
+bookingCount.json
