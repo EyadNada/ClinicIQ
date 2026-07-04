@@ -292,7 +292,7 @@ async function handleMessage(msg) {
       console.log(`   Type:    ${session.data.patientType}`)
       console.log(`   At:      ${session.data.bookedAt}\n`)
 
-      await saveBooking(session.data, bookingCount++)
+      await saveBooking(session.data, incrementBookingCount())
 
       return await msg.reply(`🎉 *Booking Confirmed!*
 
