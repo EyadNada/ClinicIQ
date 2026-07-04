@@ -40,12 +40,12 @@ const CLINIC = {
     '8': { name: 'Thigh Lift 🦵', duration: '4 hrs' },
   },
   slots: {
-  '1': '09:00',
-  '2': '11:00',
-  '3': '13:00',
-  '4': '15:00',
-  '5': '17:00',
-},
+    '1': '09:00',
+    '2': '11:00',
+    '3': '13:00',
+    '4': '15:00',
+    '5': '17:00',
+  },
   days: {
     '1': 'Sunday',
     '2': 'Monday',
@@ -262,11 +262,11 @@ async function handleMessage(msg) {
 
   if (session.step === 'enter_phone') {
     const phone = text.replace(/\s+/g, '').replace(/^00/, '+')
-    const egyptPhone = /^(\+20|0)(10|11|12|15)\d{8}$/
-    if (!egyptPhone.test(phone)) {
-      return await msg.reply('⚠️ Please enter a valid Egyptian number\nExample: 01012345678 or +201012345678')
+    const intlPhone = /^\+\d{7,15}$|^0\d{7,14}$/
+    if (!intlPhone.test(phone)) {
+      return await msg.reply('⚠️ Please enter a valid phone number with country code\nExample: +201012345678 or +966512345678')
     }
-    session.data.phone = phone.startsWith('0') ? '+2' + phone : phone
+    session.data.phone = phone.startsWith('0') && !phone.startsWith('+') ? '+2' + phone : phone
     session.step = 'confirm'
     return await msg.reply(buildSummary(session.data) + `
 
