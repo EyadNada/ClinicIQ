@@ -5,3 +5,4 @@ auth/
 .env
 credentials.json
 bookingCount.json
+sessions.json

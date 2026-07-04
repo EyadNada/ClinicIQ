@@ -1,5 +1,6 @@
 const fs = require('fs')
 const COUNTER_FILE = './bookingCount.json'
+const SESSIONS_FILE = './sessions.json'
 
 function getBookingCount() {
   if (fs.existsSync(COUNTER_FILE)) {
@@ -12,6 +13,22 @@ function incrementBookingCount() {
   const count = getBookingCount()
   fs.writeFileSync(COUNTER_FILE, JSON.stringify({ count: count + 1 }))
   return count
+}
+
+function loadSessions() {
+  if (fs.existsSync(SESSIONS_FILE)) {
+    try {
+      return JSON.parse(fs.readFileSync(SESSIONS_FILE))
+    } catch (err) {
+      console.error('⚠️ Could not read sessions.json, starting fresh:', err.message)
+      return {}
+    }
+  }
+  return {}
+}
+
+function saveSessions() {
+  fs.writeFileSync(SESSIONS_FILE, JSON.stringify(sessions))
 }
 
 const { Client, LocalAuth } = require('whatsapp-web.js')
@@ -55,10 +72,12 @@ const CLINIC = {
   }
 }
 
-const sessions = {}
+const sessions = loadSessions()
 
 function getSession(sender) {
-  if (!sessions[sender]) sessions[sender] = { step: 'idle', data: {} }
+  if (!sessions[sender]) {
+    sessions[sender] = { step: 'idle', data: {} }
+  }
   return sessions[sender]
 }
 
@@ -152,6 +171,14 @@ function buildSummary(data) {
 }
 
 async function handleMessage(msg) {
+  try {
+    await handleMessageInner(msg)
+  } finally {
+    saveSessions()
+  }
+}
+
+async function handleMessageInner(msg) {
   if (msg.fromMe) return
   if (msg.from.endsWith('@g.us')) return
   if (msg.from === 'status@broadcast') return
