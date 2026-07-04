@@ -1,4 +1,18 @@
-let bookingCount = 1
+const fs = require('fs')
+const COUNTER_FILE = './bookingCount.json'
+
+function getBookingCount() {
+  if (fs.existsSync(COUNTER_FILE)) {
+    return JSON.parse(fs.readFileSync(COUNTER_FILE)).count
+  }
+  return 1
+}
+
+function incrementBookingCount() {
+  const count = getBookingCount()
+  fs.writeFileSync(COUNTER_FILE, JSON.stringify({ count: count + 1 }))
+  return count
+}
 
 const { Client, LocalAuth } = require('whatsapp-web.js')
 const qrcode = require('qrcode-terminal')
