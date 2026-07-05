@@ -82,7 +82,10 @@ function getSession(sender) {
 }
 
 function resetSession(sender) {
-  sessions[sender] = { step: 'idle', data: {} }
+  const existingAppointment = sessions[sender]?.data?.appointment
+    ? { ...sessions[sender].data }
+    : {}
+  sessions[sender] = { step: 'idle', data: existingAppointment }
 }
 
 const MAIN_MENU = `🏥 *ClinicIQ* — Your Smart Clinic Assistant
@@ -204,18 +207,28 @@ async function handleMessageInner(msg) {
 
   if (session.step === 'main_menu') {
     switch (text) {
-      case '1': session.step = 'select_service'; return await msg.reply(SERVICES_MENU)
-      case '2': return await msg.reply(session.data.appointment ? buildSummary(session.data) + '\n\n0️⃣ ↩️ Back' : '❌ No upcoming appointment.\n\n0️⃣ ↩️ Back')
-      case '3': session.step = 'prices'; return await msg.reply(PRICES_MENU)
-      case '4': session.step = 'contact'; return await msg.reply(CONTACT_MENU)
+      case '1':
+        if (session.data.appointment) {
+          return await msg.reply(`⚠️ You already have a booking:\n\n${buildSummary(session.data)}\n\nCancel it first before booking again (option 5).`)
+        }
+        session.step = 'select_service'
+        return await msg.reply(SERVICES_MENU)
+      case '2':
+        return await msg.reply(session.data.appointment ? buildSummary(session.data) + '\n\n0️⃣ ↩️ Back' : '❌ No upcoming appointment.\n\n0️⃣ ↩️ Back')
+      case '3':
+        session.step = 'prices'
+        return await msg.reply(PRICES_MENU)
+      case '4':
+        session.step = 'contact'
+        return await msg.reply(CONTACT_MENU)
       case '5':
         if (session.data.appointment) {
-          session.data = {}
-          session.step = 'main_menu'
-          return await msg.reply('✅ Appointment cancelled.\n\n' + MAIN_MENU)
+          session.step = 'cancel_confirm'
+          return await msg.reply(`⚠️ Are you sure you want to cancel your appointment?\n\n📅 *${session.data.day}* at *${session.data.time}*\n💉 ${session.data.service}\n\n1️⃣ Yes, cancel it\n2️⃣ No, keep it`)
         }
         return await msg.reply('❌ No appointment to cancel.\n\n0️⃣ ↩️ Back')
-      default: return await msg.reply('⚠️ Choose 1–5\n\n' + MAIN_MENU)
+      default:
+        return await msg.reply('⚠️ Choose 1–5\n\n' + MAIN_MENU)
     }
   }
 
