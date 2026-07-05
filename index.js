@@ -231,6 +231,18 @@ async function handleMessageInner(msg) {
         return await msg.reply('⚠️ Choose 1–5\n\n' + MAIN_MENU)
     }
   }
+if (session.step === 'cancel_confirm') {
+    if (text === '1') {
+      session.data = {}
+      session.step = 'main_menu'
+      return await msg.reply('✅ Your appointment has been cancelled.\n\n' + MAIN_MENU)
+    }
+    if (text === '2') {
+      session.step = 'main_menu'
+      return await msg.reply('👍 Your appointment is kept.\n\n' + MAIN_MENU)
+    }
+    return await msg.reply('⚠️ Reply 1 to cancel or 2 to keep your appointment')
+  }
 
   if (session.step === 'prices') {
     if (text === '0') { session.step = 'main_menu'; return await msg.reply(MAIN_MENU) }
