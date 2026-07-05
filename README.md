@@ -76,7 +76,7 @@ The booking flow is a deterministic menu system, not free-text NLU. That's a del
 | Operational store | Google Sheets API |
 | Analytics store | Relational database |
 | Dashboard | Live, reading from the analytics store |
-| Hosting | Railway |
+| Hosting | Railway + VPS (Hetzner CX-tier) running under PM2 |
 
 ## Roadmap
 
