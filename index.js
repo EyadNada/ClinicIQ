@@ -318,6 +318,7 @@ if (session.step === 'cancel_confirm') {
     if (!intlPhone.test(phone)) {
       return await msg.reply('⚠️ Please enter a valid phone number with country code\nExample: +201012345678 or +966512345678')
     }
+
     session.data.phone = phone.startsWith('0') && !phone.startsWith('+') ? '+2' + phone : phone
     session.step = 'confirm'
     return await msg.reply(buildSummary(session.data) + `
@@ -354,8 +355,14 @@ See you on *${session.data.day}* at *${session.data.time}* 🏥
 Type *menu* anytime to manage your appointment.
 
 — ClinicIQ Team`)
+
     }
     return await msg.reply('⚠️ Reply 1 to confirm or 2 to start over')
+  }
+
+  const numberSteps = ['main_menu', 'select_service', 'patient_type', 'select_day', 'select_time', 'confirm', 'prices', 'contact', 'cancel_confirm']
+  if (numberSteps.includes(session.step)) {
+    return await msg.reply('⚠️ Please reply with a number from the menu above.')
   }
 
   return
