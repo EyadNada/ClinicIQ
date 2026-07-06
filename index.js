@@ -34,6 +34,7 @@ function saveSessions() {
 const { Client, LocalAuth } = require('whatsapp-web.js')
 const qrcode = require('qrcode-terminal')
 const { saveBooking, checkSlot, cancelBooking } = require('./notify')
+const { parsePhoneNumberFromString } = require('libphonenumber-js')
 
 const client = new Client({
   authStrategy: new LocalAuth(),
@@ -189,8 +190,8 @@ async function handleMessageInner(msg) {
   //console.log('📞 Incoming from:', msg.from)
 
   // TESTING MODE — only respond to this number
-  //const ALLOWED = ['201558533440@c.us', '214830002753718@lid']
-  //if (!ALLOWED.includes(msg.from)) return
+  const ALLOWED = ['201558533440@c.us', '214830002753718@lid']
+  if (!ALLOWED.includes(msg.from)) return
 
   const sender = msg.from
   const text = msg.body.trim()
@@ -317,13 +318,14 @@ if (session.step === 'cancel_confirm') {
 
   if (session.step === 'enter_phone') {
     if (text === '0') { session.step = 'enter_name'; return await msg.reply('✏️ *What is your full name?*') }
-    const phone = text.replace(/\s+/g, '').replace(/^00/, '+')
-    const intlPhone = /^\+\d{7,15}$|^0\d{7,14}$/
-    if (!intlPhone.test(phone)) {
-      return await msg.reply('⚠️ Please enter a valid phone number with country code\nExample: +201012345678 or +966512345678')
+
+    const phoneNumber = parsePhoneNumberFromString(text, 'EG') // defaults to Egypt if no + given
+
+    if (!phoneNumber || !phoneNumber.isValid()) {
+      return await msg.reply('⚠️ Please enter a valid phone number with country code\nExample: +201012345678 (Egypt), +966501234567 (Saudi), +971501234567 (UAE)')
     }
 
-    session.data.phone = phone.startsWith('0') && !phone.startsWith('+') ? '+2' + phone : phone
+    session.data.phone = phoneNumber.number // stored in E.164 format, e.g. +201012345678
     session.step = 'confirm'
     return await msg.reply(buildSummary(session.data) + `
 
