@@ -16,8 +16,10 @@ async function saveBooking(data, rowNumber) {
       status: 'Confirmed'
     })
     console.log('📤 Sent booking to n8n')
+    return true
   } catch (err) {
     console.error('❌ n8n webhook error:', err.message)
+    return false
   }
 }
 
