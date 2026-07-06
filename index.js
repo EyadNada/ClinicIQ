@@ -350,7 +350,11 @@ if (session.step === 'cancel_confirm') {
 
       const rowNumber = incrementBookingCount()
       session.data.rowNumber = rowNumber
-      await saveBooking(session.data, rowNumber)
+      const success = await saveBooking(session.data, rowNumber)
+
+      if (!success) {
+        return await msg.reply(`⚠️ Something went wrong saving your booking. Please try again or contact us directly.\n\n${CONTACT_MENU}`)
+      }
 
       return await msg.reply(`🎉 *Booking Confirmed!*
 
