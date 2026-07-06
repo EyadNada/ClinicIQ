@@ -233,6 +233,9 @@ async function handleMessageInner(msg) {
   }
 if (session.step === 'cancel_confirm') {
     if (text === '1') {
+      if (session.data.rowNumber) {
+        await cancelBooking(session.data.rowNumber)
+      }
       session.data = {}
       session.step = 'main_menu'
       return await msg.reply('✅ Your appointment has been cancelled.\n\n' + MAIN_MENU)
