@@ -33,7 +33,7 @@ function saveSessions() {
 
 const { Client, LocalAuth } = require('whatsapp-web.js')
 const qrcode = require('qrcode-terminal')
-const { saveBooking, checkSlot } = require('./notify')
+const { saveBooking, checkSlot, cancelBooking } = require('./notify')
 
 const client = new Client({
   authStrategy: new LocalAuth(),

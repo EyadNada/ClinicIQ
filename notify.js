@@ -20,6 +20,7 @@ async function saveBooking(data, rowNumber) {
     console.error('❌ n8n webhook error:', err.message)
   }
 }
+
 async function checkSlot(day, time) {
   try {
     const response = await axios.get('https://cliniciq.app.n8n.cloud/webhook/check-GLOBAL-slot', {
@@ -32,4 +33,16 @@ async function checkSlot(day, time) {
   }
 }
 
-module.exports = { saveBooking, checkSlot }
+async function cancelBooking(rowNumber) {
+  try {
+    await axios.post('https://cliniciq.app.n8n.cloud/webhook/ClinicIQ-Cancel', {
+      rowNumber,
+      status: 'Cancelled'
+    })
+    console.log('📤 Sent cancellation to n8n')
+  } catch (err) {
+    console.error('❌ n8n cancel webhook error:', err.message)
+  }
+}
+
+module.exports = { saveBooking, checkSlot, cancelBooking }
