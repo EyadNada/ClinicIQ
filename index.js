@@ -316,6 +316,7 @@ if (session.step === 'cancel_confirm') {
   }
 
   if (session.step === 'enter_phone') {
+    if (text === '0') { session.step = 'enter_name'; return await msg.reply('✏️ *What is your full name?*') }
     const phone = text.replace(/\s+/g, '').replace(/^00/, '+')
     const intlPhone = /^\+\d{7,15}$|^0\d{7,14}$/
     if (!intlPhone.test(phone)) {
