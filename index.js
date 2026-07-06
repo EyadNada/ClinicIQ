@@ -345,7 +345,9 @@ if (session.step === 'cancel_confirm') {
       console.log(`   Type:    ${session.data.patientType}`)
       console.log(`   At:      ${session.data.bookedAt}\n`)
 
-      await saveBooking(session.data, incrementBookingCount())
+      const rowNumber = incrementBookingCount()
+      session.data.rowNumber = rowNumber
+      await saveBooking(session.data, rowNumber)
 
       return await msg.reply(`🎉 *Booking Confirmed!*
 
