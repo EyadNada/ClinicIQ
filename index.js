@@ -189,8 +189,8 @@ async function handleMessageInner(msg) {
   //console.log('📞 Incoming from:', msg.from)
 
   // TESTING MODE — only respond to this number
-  const ALLOWED = ['201558533440@c.us', '214830002753718@lid']
-  if (!ALLOWED.includes(msg.from)) return
+  //const ALLOWED = ['201558533440@c.us', '214830002753718@lid']
+  //if (!ALLOWED.includes(msg.from)) return
 
   const sender = msg.from
   const text = msg.body.trim()
