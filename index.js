@@ -2,6 +2,7 @@ const fs = require('fs')
 const COUNTER_FILE = './bookingCount.json'
 const SESSIONS_FILE = './sessions.json'
 
+
 function getBookingCount() {
   if (fs.existsSync(COUNTER_FILE)) {
     return JSON.parse(fs.readFileSync(COUNTER_FILE)).count
@@ -35,6 +36,20 @@ const { Client, LocalAuth } = require('whatsapp-web.js')
 const qrcode = require('qrcode-terminal')
 const { saveBooking, checkSlot, cancelBooking } = require('./notify')
 const { parsePhoneNumberFromString } = require('libphonenumber-js')
+const processedMessageIds = new Set()
+const MAX_PROCESSED_IDS = 500
+
+function isDuplicateMessage(msg) {
+  const id = msg.id?._serialized || msg.id
+  if (!id) return false
+  if (processedMessageIds.has(id)) return true
+  processedMessageIds.add(id)
+  if (processedMessageIds.size > MAX_PROCESSED_IDS) {
+    const oldest = processedMessageIds.values().next().value
+    processedMessageIds.delete(oldest)
+  }
+  return false
+}
 
 const client = new Client({
   authStrategy: new LocalAuth(),
@@ -141,14 +156,14 @@ const PATIENT_TYPE_MENU = `🏥 *Are you a:*
 
 const PRICES_MENU = `💰 *Services & Prices:*
 
-👃 Rhinoplasty — 100,000 EGP
-🏃 Tummy Tuck — 100,000 EGP
-💆 Facelift / Neck Lift — 100,000 EGP
-🍑 BBL — 125,000 EGP
-🎀 Breast Lift — 50,000 EGP
-🎀 Breast Reduction — 50,000 EGP
-💪 Arm Lift — 75,000 EGP
-🦵 Thigh Lift — 50,000 EGP
+ Rhinoplasty — 100,000 EGP
+ Tummy Tuck — 100,000 EGP
+ Facelift / Neck Lift — 100,000 EGP
+ BBL — 125,000 EGP
+ Breast Lift — 50,000 EGP
+ Breast Reduction — 50,000 EGP
+ Arm Lift — 75,000 EGP
+ Thigh Lift — 50,000 EGP
 
 _Prices include surgeon fee + facility_
 
