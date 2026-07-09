@@ -104,15 +104,16 @@ function resetSession(sender) {
   sessions[sender] = { step: 'idle', data: existingAppointment }
 }
 
-const MAIN_MENU = `🏥 *ClinicIQ* — Your Smart Clinic Assistant
+const MAIN_MENU = `🏥 *MeroSculp* — Appointment Assistant | مساعد الحجز
 
-1️⃣ Book an Appointment
-2️⃣ My Appointment
-3️⃣ Services & Prices
-4️⃣ Contact Us
-5️⃣ Cancel Appointment
+1️⃣ Book an Appointment | حجز موعد
+2️⃣ My Appointment | موعدي
+3️⃣ Services | الخدمات
+4️⃣ Contact Us | تواصل معنا
+5️⃣ Cancel Appointment | إلغاء الموعد
+6️⃣ Common Questions | الأسئلة الشائعة
 
-_Reply with a number_`
+_Reply with a number | اختر رقم من القائمة_`
 
 const SERVICES_MENU = `💉 *Choose a Service:*
 
