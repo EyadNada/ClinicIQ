@@ -128,15 +128,15 @@ const SERVICES_MENU = `💉 *Choose a Service* | *اختر الخدمة*
 
 0️⃣ Back | رجوع`
 
-const DAYS_MENU = `📅 *Choose a Day:*
+const DAYS_MENU = `📅 *Choose a Day* | *اختر اليوم*
 
-1️⃣ Sunday
-2️⃣ Monday
-3️⃣ Tuesday
-4️⃣ Wednesday
-5️⃣ Thursday
+1️⃣ Sunday | الأحد
+2️⃣ Monday | الإثنين
+3️⃣ Tuesday | الثلاثاء
+4️⃣ Wednesday | الأربعاء
+5️⃣ Thursday | الخميس
 
-0️⃣ ↩️ Back`
+0️⃣ Back | رجوع`
 
 const SLOTS_MENU = `🕐 *Choose a Time:*
 
