@@ -148,36 +148,38 @@ const SLOTS_MENU = `🕐 *Choose a Time* | *اختر الوقت*
 
 0️⃣ Back | رجوع`
 
-const PATIENT_TYPE_MENU = `🏥 *Are you a:*
+const PATIENT_TYPE_MENU = `🏥 *Are you a* | *هل أنت*
 
-1️⃣ New Patient
-2️⃣ Returning Patient
+1️⃣ New Patient | مريض جديد
+2️⃣ Returning Patient | مريض عائد
 
-0️⃣ ↩️ Back`
+0️⃣ Back | رجوع`
 
-const PRICES_MENU = `💰 *Services & Prices:*
+const SERVICES_INFO_MENU = `💉 *ما نقدمه في MeroSculp*
 
- Rhinoplasty — 100,000 EGP
- Tummy Tuck — 100,000 EGP
- Facelift / Neck Lift — 100,000 EGP
- BBL — 125,000 EGP
- Breast Lift — 50,000 EGP
- Breast Reduction — 50,000 EGP
- Arm Lift — 75,000 EGP
- Thigh Lift — 50,000 EGP
+في MeroSculp، يقدم الدكتور خدمات تجميلية متخصصة بأحدث التقنيات وأعلى معايير السلامة، مع متابعة كاملة قبل وبعد العملية.
 
-_Prices include surgeon fee + facility_
+👃 *تجميل الأنف* — تعديل شكل الأنف لتحسين التناسق مع ملامح الوجه
+🏃 *شد البطن* — إزالة الجلد الزائد وشد عضلات البطن
+💆 *شد الوجه والرقبة* — تقليل علامات التقدم في السن وإعادة الشباب للملامح
+🍑 *شد وتكبير الأرداف* — إعادة تشكيل الجسم عبر نقل الدهون
+🎀 *شد الثدي* — رفع وتحسين شكل الثدي
+🎀 *تصغير الثدي* — تقليل الحجم لراحة أكبر وتناسق أفضل
+💪 *شد الذراعين* — إزالة الترهلات وشد الجلد
+🦵 *شد الفخذين* — تحسين شكل ومظهر الفخذين
 
-0️⃣ ↩️ Back`
+_للأسعار والتفاصيل، تواصل معنا مباشرة_
 
-const CONTACT_MENU = `📞 *Contact ClinicIQ:*
+0️⃣ رجوع`
 
-📱 WhatsApp: +20 100 000 0000
-📍 Cairo, Egypt
-🕐 Sun–Thu, 9AM–5PM
+const CONTACT_MENU = `📞 *Contact MeroSculp* | *تواصل مع ميروسكلب*
 
-1️⃣ Book an Appointment
-0️⃣ ↩️ Back`
+📱 WhatsApp: +20 103 117 7998
+📍 New Cairo | القاهرة الجديدة
+🕐 Sun–Thu, 9AM–5PM | الأحد–الخميس، ٩ص–٥م
+
+1️⃣ Book an Appointment | حجز موعد
+0️⃣ Back | رجوع`
 
 function buildSummary(data) {
   return `📋 *Appointment Summary:*
