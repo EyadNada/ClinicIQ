@@ -208,6 +208,11 @@ async function handleMessageInner(msg) {
   const ALLOWED = ['201558533440@c.us', '214830002753718@lid']
   if (!ALLOWED.includes(msg.from)) return
 
+  if (isRateLimited(msg.from)) {          // ← add this
+    console.log(`🚦 Rate-limited: ${msg.from}`)
+    return
+  }
+
   const sender = msg.from
   const text = msg.body.trim()
   const session = getSession(sender)
