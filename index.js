@@ -115,18 +115,18 @@ const MAIN_MENU = `🏥 *MeroSculp* — Appointment Assistant | مساعد ال�
 
 _Reply with a number | اختر رقم من القائمة_`
 
-const SERVICES_MENU = `💉 *Choose a Service:*
+const SERVICES_MENU = `💉 *Choose a Service* | *اختر الخدمة*
 
-1️⃣ Rhinoplasty (Nose Job)
-2️⃣ Tummy Tuck
-3️⃣ Facelift / Neck Lift
-4️⃣ BBL – Brazilian Butt Lift
-5️⃣ Breast Lift
-6️⃣ Breast Reduction
-7️⃣ Arm Lift
-8️⃣ Thigh Lift
+1️⃣ Rhinoplasty (Nose Job) | تجميل الأنف
+2️⃣ Tummy Tuck | شد البطن
+3️⃣ Facelift / Neck Lift | شد الوجه والرقبة
+4️⃣ BBL – Brazilian Butt Lift | شد وتكبير الأرداف
+5️⃣ Breast Lift | شد الثدي
+6️⃣ Breast Reduction | تصغير الثدي
+7️⃣ Arm Lift | شد الذراعين
+8️⃣ Thigh Lift | شد الفخذين
 
-0️⃣ ↩️ Back`
+0️⃣ Back | رجوع`
 
 const DAYS_MENU = `📅 *Choose a Day:*
 
