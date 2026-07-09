@@ -182,14 +182,14 @@ const CONTACT_MENU = `📞 *Contact MeroSculp* | *تواصل مع ميروسكل
 0️⃣ Back | رجوع`
 
 function buildSummary(data) {
-  return `📋 *Appointment Summary:*
+  return `📋 *Appointment Summary* | *ملخص الموعد*
 
-👤 Name: ${data.name || '—'}
-📱 Phone: ${data.phone || '—'}
-💉 Service: ${data.service || '—'}
-📅 Day: ${data.day || '—'}
-🕐 Time: ${data.time || '—'}
-🏥 Type: ${data.patientType || '—'}`
+👤 Name | الاسم: ${data.name || '—'}
+📱 Phone | الهاتف: ${data.phone || '—'}
+💉 Service | الخدمة: ${data.service || '—'}
+📅 Day | اليوم: ${data.day || '—'}
+🕐 Time | الوقت: ${data.time || '—'}
+🏥 Type | النوع: ${data.patientType || '—'}`
 }
 
 async function handleMessage(msg) {
@@ -233,12 +233,12 @@ async function handleMessageInner(msg) {
     switch (text) {
       case '1':
         if (session.data.appointment) {
-          return await msg.reply(`⚠️ You already have a booking:\n\n${buildSummary(session.data)}\n\nCancel it first before booking again (option 5).`)
+          return await msg.reply(`⚠️ You already have a booking | لديك حجز :\n\n${buildSummary(session.data)}\n\nCancel it first before booking again (option 5) | يرجى إلغاء الحجز الحالي قبل حجز موعد جديد (خيار ٥)`)
         }
         session.step = 'select_service'
         return await msg.reply(SERVICES_MENU)
       case '2':
-        return await msg.reply(session.data.appointment ? buildSummary(session.data) + '\n\n0️⃣ ↩️ Back' : '❌ No upcoming appointment.\n\n0️⃣ ↩️ Back')
+        return await msg.reply(session.data.appointment ? buildSummary(session.data) + '\n\n0️⃣ Back | رجوع' : '❌ No upcoming appointment | لا يوجد موعد حالي\n\n0️⃣ Back | رجوع')
       case '3':
         session.step = 'prices'
         return await msg.reply(PRICES_MENU)
@@ -248,11 +248,11 @@ async function handleMessageInner(msg) {
       case '5':
         if (session.data.appointment) {
           session.step = 'cancel_confirm'
-          return await msg.reply(`⚠️ Are you sure you want to cancel your appointment?\n\n📅 *${session.data.day}* at *${session.data.time}*\n💉 ${session.data.service}\n\n1️⃣ Yes, cancel it\n2️⃣ No, keep it`)
+          return await msg.reply(`⚠️ Are you sure you want to cancel your appointment? | هل أنت متأكد من إلغاء الموعد؟\n\n📅 *${session.data.day}* at *${session.data.time}*\n💉 ${session.data.service}\n\n1️⃣ Yes, cancel it | نعم، إلغاء\n2️⃣ No, keep it | لا، الاحتفاظ به`)
         }
-        return await msg.reply('❌ No appointment to cancel.\n\n0️⃣ ↩️ Back')
+        return await msg.reply('❌ No appointment to cancel | لا يوجد موعد لإلغائه\n\n0️⃣ Back | رجوع')
       default:
-        return await msg.reply('⚠️ Choose 1–5\n\n' + MAIN_MENU)
+        return await msg.reply('⚠️ Choose 1–5 | اختر رقم من ١ إلى ٥\n\n' + MAIN_MENU)
     }
   }
 if (session.step === 'cancel_confirm') {
@@ -262,13 +262,13 @@ if (session.step === 'cancel_confirm') {
       }
       session.data = {}
       session.step = 'main_menu'
-      return await msg.reply('✅ Your appointment has been cancelled.\n\n' + MAIN_MENU)
+      return await msg.reply('✅ Your appointment has been cancelled | تم إلغاء موعدك\n\n' + MAIN_MENU)
     }
     if (text === '2') {
       session.step = 'main_menu'
-      return await msg.reply('👍 Your appointment is kept.\n\n' + MAIN_MENU)
+      return await msg.reply('👍 Your appointment is kept | تم الاحتفاظ بموعدك\n\n' + MAIN_MENU)
     }
-    return await msg.reply('⚠️ Reply 1 to cancel or 2 to keep your appointment')
+    return await msg.reply('⚠️ Reply 1 to cancel or 2 to keep your appointment | الرجاء الرد بـ ١ للإلغاء أو ٢ للاحتفاظ بالموعد')
   }
 
   if (session.step === 'prices') {
@@ -289,8 +289,7 @@ if (session.step === 'cancel_confirm') {
       session.step = 'patient_type'
       return await msg.reply(PATIENT_TYPE_MENU)
     }
-    return await msg.reply('⚠️ Choose 1–8\n\n' + SERVICES_MENU)
-  }
+  return await msg.reply('⚠️ Choose 1–8 | اختر رقم من ١ إلى ٨\n\n' + SERVICES_MENU)  }
 
   if (session.step === 'patient_type') {
     if (text === '0') { session.step = 'select_service'; return await msg.reply(SERVICES_MENU) }
@@ -299,17 +298,20 @@ if (session.step === 'cancel_confirm') {
       session.step = 'select_day'
       return await msg.reply(DAYS_MENU)
     }
-    return await msg.reply('⚠️ Reply 1 or 2\n\n' + PATIENT_TYPE_MENU)
+    return await msg.reply('⚠️ Reply 1 or 2 | الرجاء الرد بـ ١ أو ٢\n\n' + PATIENT_TYPE_MENU)
   }
 
   if (session.step === 'select_day') {
-    if (text === '0') { session.step = 'patient_type'; return await msg.reply(PATIENT_TYPE_MENU) }
+    if (text === '0') 
+      { session.step = 'patient_type'; 
+      return await msg.reply('⚠️ Reply 1 or 2 | الرجاء الرد بـ ١ أو ٢\n\n' + PATIENT_TYPE_MENU)
+    }
     if (CLINIC.days[text]) {
       session.data.day = CLINIC.days[text]
       session.step = 'select_time'
       return await msg.reply(SLOTS_MENU)
     }
-    return await msg.reply('⚠️ Choose 1–5\n\n' + DAYS_MENU)
+    return await msg.reply('⚠️ Choose 1–5 | اختر رقم من ١ إلى ٥\n\n' + DAYS_MENU)
   }
 
   if (session.step === 'select_time') {
@@ -320,46 +322,53 @@ if (session.step === 'cancel_confirm') {
       // Check for clashes before proceeding
       const available = await checkSlot(session.data.day, session.data.time)
       if (!available) {
-        return await msg.reply(`❌ Sorry, *${session.data.day}* at *${session.data.time}* is already booked.\n\nPlease choose another time:\n\n` + SLOTS_MENU)
+        return await msg.reply(`❌ Sorry, *${session.data.day}* at *${session.data.time}* is already booked | عذراً، هذا الموعد محجوز \n\nPlease choose another time | يرجى اختيار وقت آخر:\n\n` + SLOTS_MENU)
       }
 
       session.step = 'enter_name'
-      return await msg.reply('✏️ *What is your full name?*')
+      return await msg.reply('✏️ *What is your full name?* | *ما هو اسمك الكامل؟*')
     }
-    return await msg.reply('⚠️ Choose 1–5\n\n' + SLOTS_MENU)
+    return await msg.reply('⚠️ Choose 1–5 | اختر رقم من ١ إلى ٥\n\n' + SLOTS_MENU)
   }
 
   if (session.step === 'enter_name') {
     const nameValid = /^[a-zA-Z\u0600-\u06FF\s]{3,50}$/.test(text)
     if (!nameValid) {
-      return await msg.reply('⚠️ Please enter a valid full name (letters only, 3–50 characters)')
+      return await msg.reply('⚠️ Please enter a valid full name (letters only, 3–50 characters) | الرجاء إدخال اسم صحيح (حروف فقط، ٣-٥٠ حرف)')
     }
     session.data.name = text.trim()
     session.step = 'enter_phone'
-    return await msg.reply('📱 *Your phone number?*\n_(for appointment confirmation)_')
+    return await msg.reply('📱 *Your phone number?* | *رقم هاتفك؟*\n_(for appointment confirmation | لتأكيد الموعد)_')
   }
 
   if (session.step === 'enter_phone') {
-    if (text === '0') { session.step = 'enter_name'; return await msg.reply('✏️ *What is your full name?*') }
+    if (text === '0') { session.step = 'enter_name'; return await msg.reply('✏️ *What is your full name?* | *ما هو اسمك الكامل؟*') }
 
     const phoneNumber = parsePhoneNumberFromString(text, 'EG') // defaults to Egypt if no + given
 
     if (!phoneNumber || !phoneNumber.isValid()) {
-      return await msg.reply('⚠️ Please enter a valid phone number with country code\nExample: +201012345678 (Egypt), +966501234567 (Saudi), +971501234567 (UAE)')
+      return await msg.reply('⚠️ Please enter a valid phone number with country code | الرجاء إدخال رقم هاتف صحيح مع رمز الدولة\nExample | مثال: +201012345678 (Egypt), +966501234567 (Saudi), +971501234567 (UAE)')
     }
 
-    session.data.phone = phoneNumber.number // stored in E.164 format, e.g. +201012345678
+    session.data.phone = phoneNumber.number
     session.step = 'confirm'
     return await msg.reply(buildSummary(session.data) + `
 
-1️⃣ ✅ Confirm
-2️⃣ 🔄 Start Over
-0️⃣ ↩️ Back`)
+1️⃣ Confirm | تأكيد
+2️⃣ Start Over | البدء من جديد
+0️⃣ Back | رجوع`)
   }
 
   if (session.step === 'confirm') {
-    if (text === '0') { session.step = 'main_menu'; return await msg.reply(MAIN_MENU) }
-    if (text === '2') { resetSession(sender); sessions[sender].step = 'main_menu'; return await msg.reply(MAIN_MENU) }
+    if (text === '0') { 
+      session.step = 'main_menu'; 
+      return await msg.reply(MAIN_MENU) 
+    }
+    if (text === '2') { 
+      resetSession(sender); 
+      sessions[sender].step = 'main_menu'; 
+      return await msg.reply(MAIN_MENU) 
+    }
     if (text === '1') {
       session.data.appointment = true
       session.data.bookedAt = new Date().toLocaleString('en-EG')
@@ -382,22 +391,24 @@ if (session.step === 'cancel_confirm') {
         return await msg.reply(`⚠️ Something went wrong saving your booking. Please try again or contact us directly.\n\n${CONTACT_MENU}`)
       }
 
-      return await msg.reply(`🎉 *Booking Confirmed!*
+      return await msg.reply(`🎉 *Booking Confirmed!* | *تم تأكيد الحجز!*
 
 ${buildSummary(session.data)}
 
-See you on *${session.data.day}* at *${session.data.time}* 🏥
-Type *menu* anytime to manage your appointment.
+See you on *${session.data.day}* at *${session.data.time}* | نراك يوم *${session.data.day}* الساعة *${session.data.time}* 🏥
+Type *menu* anytime to manage your appointment | اكتب *menu* في أي وقت لإدارة موعدك
 
-— ClinicIQ Team`)
+— MeroSculp Team`)
 
     }
-    return await msg.reply('⚠️ Reply 1 to confirm or 2 to start over')
+    return await msg.reply('⚠️ Reply 1 to confirm or 2 to start over | الرجاء الرد بـ ١ للتأكيد أو ٢ للبدء من جديد')
   }
 
   const numberSteps = ['main_menu', 'select_service', 'patient_type', 'select_day', 'select_time', 'confirm', 'prices', 'contact', 'cancel_confirm']
   if (numberSteps.includes(session.step)) {
-    return await msg.reply('⚠️ Please reply with a number from the menu above.')
+    if (numberSteps.includes(session.step)) {
+    return await msg.reply('⚠️ Please reply with a number from the menu above | الرجاء الرد برقم من القائمة أعلاه')
+  }
   }
 
   return
