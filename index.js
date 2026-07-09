@@ -138,15 +138,15 @@ const DAYS_MENU = `📅 *Choose a Day* | *اختر اليوم*
 
 0️⃣ Back | رجوع`
 
-const SLOTS_MENU = `🕐 *Choose a Time:*
+const SLOTS_MENU = `🕐 *Choose a Time* | *اختر الوقت*
 
-1️⃣ 9:00 AM
-2️⃣ 11:00 AM
-3️⃣ 1:00 PM
-4️⃣ 3:00 PM
-5️⃣ 5:00 PM
+1️⃣ 9:00 AM | ٩:٠٠ ص
+2️⃣ 11:00 AM | ١١:٠٠ ص
+3️⃣ 1:00 PM | ١:٠٠ م
+4️⃣ 3:00 PM | ٣:٠٠ م
+5️⃣ 5:00 PM | ٥:٠٠ م
 
-0️⃣ ↩️ Back`
+0️⃣ Back | رجوع`
 
 const PATIENT_TYPE_MENU = `🏥 *Are you a:*
 
