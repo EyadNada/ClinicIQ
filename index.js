@@ -414,6 +414,10 @@ client.on('auth_failure', () => {
 
 client.on('message', async (msg) => {
   if (msg.fromMe) return
+  if (isDuplicateMessage(msg)) {
+    console.log('⏭️ Skipped duplicate message:', msg.id?._serialized)
+    return
+  }
   try { await handleMessage(msg) }
   catch (err) { console.error('Error:', err) }
 })
