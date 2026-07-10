@@ -292,7 +292,7 @@ if (session.step === 'cancel_confirm') {
   if (session.step === 'contact') {
     if (text === '0') { session.step = 'main_menu'; return await msg.reply(MAIN_MENU) }
     if (text === '1') { session.step = 'select_service'; return await msg.reply(SERVICES_MENU) }
-    return await msg.reply(CONTACT_MENU)
+    return await msg.reply('⚠️ Reply 0 to go back or 1 to book | الرجاء الرد بـ 0 للرجوع أو 1 للحجز\n\n' + CONTACT_MENU)
   }
 
   if (session.step === 'select_service') {
