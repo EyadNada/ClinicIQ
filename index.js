@@ -121,7 +121,6 @@ const MAIN_MENU = `🏥 *MeroSculp* — Appointment Assistant | مساعد ال�
 3️⃣ Services | الخدمات
 4️⃣ Contact Us | تواصل معنا
 5️⃣ Cancel Appointment | إلغاء الموعد
-6️⃣ Common Questions | الأسئلة الشائعة
 
 _Reply with a number | اختر رقم من القائمة_`
 
