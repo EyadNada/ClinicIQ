@@ -283,7 +283,7 @@ if (session.step === 'cancel_confirm') {
 
   if (session.step === 'prices') {
     if (text === '0') { session.step = 'main_menu'; return await msg.reply(MAIN_MENU) }
-    return await msg.reply(SERVICES_INFO_MENU)
+    return await msg.reply('⚠️ Reply 0 to go back | الرجاء الرد بـ 0 للرجوع\n\n' + SERVICES_INFO_MENU)
   }
 
   if (session.step === 'contact') {
