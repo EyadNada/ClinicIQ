@@ -50,6 +50,16 @@ function isDuplicateMessage(msg) {
   }
   return false
 }
+const lastReplyTime = {}
+const RATE_LIMIT_MS = 3000
+
+function isRateLimited(sender) {
+  const now = Date.now()
+  const last = lastReplyTime[sender] || 0
+  if (now - last < RATE_LIMIT_MS) return true
+  lastReplyTime[sender] = now
+  return false
+}
 
 const client = new Client({
   authStrategy: new LocalAuth(),
@@ -208,8 +218,8 @@ async function handleMessageInner(msg) {
   //console.log('📞 Incoming from:', msg.from)
 
   // TESTING MODE — only respond to this number
-  const ALLOWED = ['201558533440@c.us', '214830002753718@lid']
-  if (!ALLOWED.includes(msg.from)) return
+  // const ALLOWED = ['201558533440@c.us', '214830002753718@lid', '966594544343@c.us']
+  // if (!ALLOWED.includes(msg.from)) return
 
   if (isRateLimited(msg.from)) {          // ← add this
     console.log(`🚦 Rate-limited: ${msg.from}`)
@@ -241,7 +251,7 @@ async function handleMessageInner(msg) {
         return await msg.reply(session.data.appointment ? buildSummary(session.data) + '\n\n0️⃣ Back | رجوع' : '❌ No upcoming appointment | لا يوجد موعد حالي\n\n0️⃣ Back | رجوع')
       case '3':
         session.step = 'prices'
-        return await msg.reply(PRICES_MENU)
+        return await msg.reply(SERVICES_INFO_MENU)
       case '4':
         session.step = 'contact'
         return await msg.reply(CONTACT_MENU)
@@ -273,7 +283,7 @@ if (session.step === 'cancel_confirm') {
 
   if (session.step === 'prices') {
     if (text === '0') { session.step = 'main_menu'; return await msg.reply(MAIN_MENU) }
-    return await msg.reply(PRICES_MENU)
+    return await msg.reply(SERVICES_INFO_MENU)
   }
 
   if (session.step === 'contact') {
