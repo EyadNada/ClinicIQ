@@ -220,19 +220,21 @@ async function handleMessageInner(msg) {
   // const ALLOWED = ['201558533440@c.us', '214830002753718@lid', '966594544343@c.us']
   // if (!ALLOWED.includes(msg.from)) return
 
-  if (isRateLimited(msg.from)) {          // ← add this
-    console.log(`🚦 Rate-limited: ${msg.from}`)
+  iconst sender = msg.from
+  const text = msg.body.trim()
+
+  if (isRateLimited(sender, text)) {
+    console.log(`🚦 Rate-limited duplicate: ${sender} | Msg: ${text}`)
     return
   }
 
-  const sender = msg.from
-  const text = msg.body.trim()
   const session = getSession(sender)
 
   console.log(`📩 [${sender}] Step: ${session.step} | Msg: ${text}`)
 
   const triggers = ['hi', 'hello', 'hey', 'مرحبا', 'هاي', 'start', 'menu']
-  if (triggers.includes(text.toLowerCase()) || session.step === 'idle') {
+  const canReset = session.step === 'idle' || session.step === 'main_menu'
+  if (canReset && (triggers.includes(text.toLowerCase()) || session.step === 'idle')) {
     resetSession(sender)
     sessions[sender].step = 'main_menu'
     return await msg.reply(MAIN_MENU)
