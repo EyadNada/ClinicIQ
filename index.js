@@ -312,9 +312,9 @@ if (session.step === 'cancel_confirm') {
   }
 
   if (session.step === 'select_day') {
-    if (text === '0') 
-      { session.step = 'patient_type'; 
-      return await msg.reply('⚠️ Reply 1 or 2 | الرجاء الرد بـ ١ أو ٢\n\n' + PATIENT_TYPE_MENU)
+    if (text === '0') { 
+      session.step = 'patient_type'
+      return await msg.reply(PATIENT_TYPE_MENU)
     }
     if (CLINIC.days[text]) {
       session.data.day = CLINIC.days[text]
