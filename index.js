@@ -50,14 +50,16 @@ function isDuplicateMessage(msg) {
   }
   return false
 }
-const lastReplyTime = {}
-const RATE_LIMIT_MS = 3000
+const lastMessage = {}
+const RATE_LIMIT_MS = 1500
 
-function isRateLimited(sender) {
+function isRateLimited(sender, text) {
   const now = Date.now()
-  const last = lastReplyTime[sender] || 0
-  if (now - last < RATE_LIMIT_MS) return true
-  lastReplyTime[sender] = now
+  const last = lastMessage[sender]
+  if (last && last.text === text && (now - last.time) < RATE_LIMIT_MS) {
+    return true
+  }
+  lastMessage[sender] = { text, time: now }
   return false
 }
 
@@ -220,7 +222,7 @@ async function handleMessageInner(msg) {
   // const ALLOWED = ['201558533440@c.us', '214830002753718@lid', '966594544343@c.us']
   // if (!ALLOWED.includes(msg.from)) return
 
-  iconst sender = msg.from
+  const sender = msg.from
   const text = msg.body.trim()
 
   if (isRateLimited(sender, text)) {
