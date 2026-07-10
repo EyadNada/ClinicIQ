@@ -413,13 +413,6 @@ Type *menu* anytime to manage your appointment | اكتب *menu* في أي وق�
     return await msg.reply('⚠️ Reply 1 to confirm or 2 to start over | الرجاء الرد بـ ١ للتأكيد أو ٢ للبدء من جديد')
   }
 
-  const numberSteps = ['main_menu', 'select_service', 'patient_type', 'select_day', 'select_time', 'confirm', 'prices', 'contact', 'cancel_confirm']
-  if (numberSteps.includes(session.step)) {
-    if (numberSteps.includes(session.step)) {
-    return await msg.reply('⚠️ Please reply with a number from the menu above | الرجاء الرد برقم من القائمة أعلاه')
-  }
-  }
-
   return
 }
 
