@@ -4,7 +4,7 @@ const N8N_WEBHOOK_URL = 'https://cliniciq.app.n8n.cloud/webhook/ClinicIQ-Booking
 
 async function saveBooking(data, rowNumber) {
   try {
-    await axios.post(N8N_WEBHOOK_URL, {
+    const response = await axios.post(N8N_WEBHOOK_URL, {
       rowNumber,
       name: data.name,
       phone: data.phone,
@@ -15,7 +15,13 @@ async function saveBooking(data, rowNumber) {
       bookedAt: data.bookedAt,
       status: 'Confirmed'
     })
-    console.log('📤 Sent booking to n8n')
+
+    if (!response.data || response.data.success !== true) {
+      console.error('❌ n8n reported failure or unexpected response:', response.data)
+      return false
+    }
+
+    console.log('📤 Booking confirmed written to sheet')
     return true
   } catch (err) {
     console.error('❌ n8n webhook error:', err.message)
