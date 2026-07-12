@@ -265,7 +265,7 @@ async function handleMessageInner(msg) {
         }
         return await msg.reply(' No appointment to cancel | لا يوجد موعد لإلغائه\n\n0️⃣ Back | رجوع')
       default:
-        return await msg.reply(' Choose 1–5 | اختر رقم من ١ إلى ٥\n\n' + MAIN_MENU)
+        return await msg.reply(' ⚠️Choose 1–5 | اختر رقم من ١ إلى ٥\n\n' + MAIN_MENU)
     }
   }
 if (session.step === 'cancel_confirm') {
@@ -275,24 +275,24 @@ if (session.step === 'cancel_confirm') {
       }
       session.data = {}
       session.step = 'main_menu'
-      return await msg.reply('✅ Your appointment has been cancelled | تم إلغاء موعدك\n\n' + MAIN_MENU)
+      return await msg.reply(' Your appointment has been cancelled | تم إلغاء موعدك\n\n' + MAIN_MENU)
     }
     if (text === '2') {
       session.step = 'main_menu'
-      return await msg.reply('👍 Your appointment is kept | تم الاحتفاظ بموعدك\n\n' + MAIN_MENU)
+      return await msg.reply(' Your appointment is kept | تم الاحتفاظ بموعدك\n\n' + MAIN_MENU)
     }
-    return await msg.reply('⚠️ Reply 1 to cancel or 2 to keep your appointment | الرجاء الرد بـ ١ للإلغاء أو ٢ للاحتفاظ بالموعد')
+    return await msg.reply(' ⚠️Reply 1 to cancel or 2 to keep your appointment | الرجاء الرد بـ ١ للإلغاء أو ٢ للاحتفاظ بالموعد')
   }
 
   if (session.step === 'prices') {
     if (text === '0') { session.step = 'main_menu'; return await msg.reply(MAIN_MENU) }
-    return await msg.reply('⚠️ Reply 0 to go back | الرجاء الرد بـ 0 للرجوع\n\n' + SERVICES_INFO_MENU)
+    return await msg.reply(' ⚠️Reply 0 to go back | الرجاء الرد بـ 0 للرجوع\n\n' + SERVICES_INFO_MENU)
   }
 
   if (session.step === 'contact') {
     if (text === '0') { session.step = 'main_menu'; return await msg.reply(MAIN_MENU) }
     if (text === '1') { session.step = 'select_service'; return await msg.reply(SERVICES_MENU) }
-    return await msg.reply('⚠️ Reply 0 to go back or 1 to book | الرجاء الرد بـ 0 للرجوع أو 1 للحجز\n\n' + CONTACT_MENU)
+    return await msg.reply('⚠️Reply 0 to go back or 1 to book | الرجاء الرد بـ 0 للرجوع أو 1 للحجز\n\n' + CONTACT_MENU)
   }
 
   if (session.step === 'select_service') {
@@ -335,11 +335,11 @@ if (session.step === 'cancel_confirm') {
       // Check for clashes before proceeding
       const available = await checkSlot(session.data.day, session.data.time)
       if (!available) {
-        return await msg.reply(`❌ Sorry, *${session.data.day}* at *${session.data.time}* is already booked | عذراً، هذا الموعد محجوز \n\nPlease choose another time | يرجى اختيار وقت آخر:\n\n` + SLOTS_MENU)
+        return await msg.reply(` Sorry, *${session.data.day}* at *${session.data.time}* is already booked | عذراً، هذا الموعد محجوز \n\nPlease choose another time | يرجى اختيار وقت آخر:\n\n` + SLOTS_MENU)
       }
 
       session.step = 'enter_name'
-      return await msg.reply('✏️ *What is your full name?* | *ما هو اسمك الكامل؟*')
+      return await msg.reply(' *What is your full name?* | *ما هو اسمك الكامل؟*')
     }
     return await msg.reply('⚠️ Choose 1–5 | اختر رقم من ١ إلى ٥\n\n' + SLOTS_MENU)
   }
@@ -347,20 +347,20 @@ if (session.step === 'cancel_confirm') {
   if (session.step === 'enter_name') {
     const nameValid = /^[a-zA-Z\u0600-\u06FF\s]{3,50}$/.test(text)
     if (!nameValid) {
-      return await msg.reply('⚠️ Please enter a valid full name (letters only, 3–50 characters) | الرجاء إدخال اسم صحيح (حروف فقط، ٣-٥٠ حرف)')
+      return await msg.reply('⚠️ Please enter a valid full name  | الرجاءإدخال اسمك الكامل - )')
     }
     session.data.name = text.trim()
     session.step = 'enter_phone'
-    return await msg.reply('📱 *Your phone number?* | *رقم هاتفك؟*\n_(for appointment confirmation | لتأكيد الموعد)_')
+    return await msg.reply(' *Your phone number?* | *رقم هاتفك؟*\n_(for appointment confirmation | لتأكيد الموعد)_')
   }
 
   if (session.step === 'enter_phone') {
-    if (text === '0') { session.step = 'enter_name'; return await msg.reply('✏️ *What is your full name?* | *ما هو اسمك الكامل؟*') }
+    if (text === '0') { session.step = 'enter_name'; return await msg.reply(' *What is your full name?* | *ما هو اسمك الكامل؟*') }
 
     const phoneNumber = parsePhoneNumberFromString(text, 'EG') // defaults to Egypt if no + given
 
     if (!phoneNumber || !phoneNumber.isValid()) {
-      return await msg.reply('⚠️ Please enter a valid phone number with country code | الرجاء إدخال رقم هاتف صحيح مع رمز الدولة\nExample | مثال: +201012345678 (Egypt), +966501234567 (Saudi), +971501234567 (UAE)')
+      return await msg.reply('⚠️ Please enter a valid phone number with country code | الرجاء إدخال رقم هاتف صحيح مع رمز الدولة\nExample | +201558766773 (Egypt), +966501234567 (Saudi), +971501234567 (UAE)')
     }
 
     session.data.phone = phoneNumber.number
@@ -404,7 +404,7 @@ if (session.step === 'cancel_confirm') {
         return await msg.reply(`⚠️ Something went wrong saving your booking. Please try again or contact us directly.\n\n${CONTACT_MENU}`)
       }
 
-      return await msg.reply(`🎉 *Booking Confirmed!* | *تم تأكيد الحجز!*
+      return await msg.reply(` *Booking Confirmed!* | *تم تأكيد الحجز!*
 
 ${buildSummary(session.data)}
 
