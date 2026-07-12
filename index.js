@@ -383,10 +383,6 @@ if (session.step === 'cancel_confirm') {
       return await msg.reply(MAIN_MENU) 
     }
     if (text === '1') {
-      session.data.appointment = true
-      session.data.bookedAt = new Date().toLocaleString('en-EG')
-      session.step = 'main_menu'
-
       console.log(`\n✅ NEW BOOKING`)
       console.log(`   Name:    ${session.data.name}`)
       console.log(`   Phone:   ${session.data.phone}`)
@@ -394,17 +390,31 @@ if (session.step === 'cancel_confirm') {
       console.log(`   Day:     ${session.data.day}`)
       console.log(`   Time:    ${session.data.time}`)
       console.log(`   Type:    ${session.data.patientType}`)
-      console.log(`   At:      ${session.data.bookedAt}\n`)
 
       const rowNumber = incrementBookingCount()
-      session.data.rowNumber = rowNumber
-      const success = await saveBooking(session.data, rowNumber)
+      const bookedAt = new Date().toLocaleString('en-EG')
+      const success = await saveBooking({
+        name: session.data.name,
+        phone: session.data.phone,
+        service: session.data.service,
+        day: session.data.day,
+        time: session.data.time,
+        patientType: session.data.patientType,
+        bookedAt: bookedAt
+      }, rowNumber)
 
       if (!success) {
         return await msg.reply(`⚠️ Something went wrong saving your booking. Please try again or contact us directly.\n\n${CONTACT_MENU}`)
       }
 
-      return await msg.reply(` *Booking Confirmed!* | *تم تأكيد الحجز!*
+      session.data.appointment = true
+      session.data.bookedAt = bookedAt
+      session.data.rowNumber = rowNumber
+      session.step = 'main_menu'
+
+      console.log(`   At:      ${bookedAt}\n`)
+
+      return await msg.reply(`🎉 *Booking Confirmed!* | *تم تأكيد الحجز!*
 
 ${buildSummary(session.data)}
 
@@ -412,7 +422,6 @@ See you on *${session.data.day}* at *${session.data.time}* | نراك يوم *${
 Type *menu* anytime to manage your appointment | اكتب *menu* في أي وقت لإدارة موعدك
 
 — MeroSculp Team`)
-
     }
     return await msg.reply('⚠️ Reply 1 to confirm or 2 to start over | الرجاء الرد بـ ١ للتأكيد أو ٢ للبدء من جديد')
   }
