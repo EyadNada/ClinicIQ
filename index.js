@@ -21,7 +21,7 @@ function loadSessions() {
     try {
       return JSON.parse(fs.readFileSync(SESSIONS_FILE))
     } catch (err) {
-      console.error('⚠️ Could not read sessions.json, starting fresh:', err.message)
+      console.error(' could not read sessions.json, starting fresh:', err.message)
       return {}
     }
   }
@@ -75,14 +75,14 @@ const CLINIC = {
   name: 'ClinicIQ',
   phone: '+20 100 000 0000',
   services: {
-    '1': { name: 'Rhinoplasty (Nose Job) 👃', duration: '3 hrs' },
-    '2': { name: 'Tummy Tuck 🏃', duration: '4 hrs' },
-    '3': { name: 'Facelift / Neck Lift 💆', duration: '3 hrs' },
-    '4': { name: 'BBL – Brazilian Butt Lift 🍑', duration: '4 hrs' },
-    '5': { name: 'Breast Lift 🎀', duration: '3 hrs' },
-    '6': { name: 'Breast Reduction 🎀', duration: '4 hrs' },
-    '7': { name: 'Arm Lift 💪', duration: '3 hrs' },
-    '8': { name: 'Thigh Lift 🦵', duration: '4 hrs' },
+    '1': { name: 'Rhinoplasty (Nose Job) ', duration: '3 hrs' },
+    '2': { name: 'Tummy Tuck ', duration: '4 hrs' },
+    '3': { name: 'Facelift / Neck Lift ', duration: '3 hrs' },
+    '4': { name: 'BBL – Brazilian Butt Lift ', duration: '4 hrs' },
+    '5': { name: 'Breast Lift ', duration: '3 hrs' },
+    '6': { name: 'Breast Reduction ', duration: '4 hrs' },
+    '7': { name: 'Arm Lift ', duration: '3 hrs' },
+    '8': { name: 'Thigh Lift ', duration: '4 hrs' },
   },
   slots: {
     '1': '09:00',
@@ -170,14 +170,14 @@ const SERVICES_INFO_MENU = `💉 *ما نقدمه في MeroSculp*
 
 في MeroSculp، يقدم الدكتور خدمات تجميلية متخصصة بأحدث التقنيات وأعلى معايير السلامة، مع متابعة كاملة قبل وبعد العملية.
 
-👃 *تجميل الأنف* — تعديل شكل الأنف لتحسين التناسق مع ملامح الوجه
-🏃 *شد البطن* — إزالة الجلد الزائد وشد عضلات البطن
-💆 *شد الوجه والرقبة* — تقليل علامات التقدم في السن وإعادة الشباب للملامح
-🍑 *شد وتكبير الأرداف* — إعادة تشكيل الجسم عبر نقل الدهون
-🎀 *شد الثدي* — رفع وتحسين شكل الثدي
-🎀 *تصغير الثدي* — تقليل الحجم لراحة أكبر وتناسق أفضل
-💪 *شد الذراعين* — إزالة الترهلات وشد الجلد
-🦵 *شد الفخذين* — تحسين شكل ومظهر الفخذين
+ *تجميل الأنف* — تعديل شكل الأنف لتحسين التناسق مع ملامح الوجه
+ *شد البطن* — إزالة الجلد الزائد وشد عضلات البطن
+ *شد الوجه والرقبة* — تقليل علامات التقدم في السن وإعادة الشباب للملامح
+ *شد وتكبير الأرداف* — إعادة تشكيل الجسم عبر نقل الدهون
+ *شد الثدي* — رفع وتحسين شكل الثدي
+ *تصغير الثدي* — تقليل الحجم لراحة أكبر وتناسق أفضل
+ *شد الذراعين* — إزالة الترهلات وشد الجلد
+ *شد الفخذين* — تحسين شكل ومظهر الفخذين
 
 _للأسعار والتفاصيل، تواصل معنا مباشرة_
 
@@ -199,8 +199,7 @@ function buildSummary(data) {
 📱 Phone | الهاتف: ${data.phone || '—'}
 💉 Service | الخدمة: ${data.service || '—'}
 📅 Day | اليوم: ${data.day || '—'}
-🕐 Time | الوقت: ${data.time || '—'}
-🏥 Type | النوع: ${data.patientType || '—'}`
+🕐 Time | الوقت: ${data.time || '—'}`
 }
 
 async function handleMessage(msg) {
@@ -216,7 +215,7 @@ async function handleMessageInner(msg) {
   if (msg.from.endsWith('@g.us')) return
   if (msg.from === 'status@broadcast') return
   if (msg.type !== 'chat') return
-  //console.log('📞 Incoming from:', msg.from)
+  //console.log(' Incoming from:', msg.from)
 
   // TESTING MODE — only respond to this number
   // const ALLOWED = ['201558533440@c.us', '214830002753718@lid', '966594544343@c.us']
@@ -245,13 +244,14 @@ async function handleMessageInner(msg) {
   if (session.step === 'main_menu') {
     switch (text) {
       case '1':
+        case '1':
         if (session.data.appointment) {
-          return await msg.reply(`⚠️ You already have a booking | لديك حجز :\n\n${buildSummary(session.data)}\n\nCancel it first before booking again (option 5) | يرجى إلغاء الحجز الحالي قبل حجز موعد جديد (خيار ٥)`)
+          return await msg.reply(` You already have a booking | لديك حجز :\n\n${buildSummary(session.data)}\n\n5️⃣ Cancel it first before booking again | يرجى إلغاء الحجز الحالي أولاً قبل حجز موعد جديد`)
         }
         session.step = 'select_service'
         return await msg.reply(SERVICES_MENU)
       case '2':
-        return await msg.reply(session.data.appointment ? buildSummary(session.data) + '\n\n0️⃣ Back | رجوع' : '❌ No upcoming appointment | لا يوجد موعد حالي\n\n0️⃣ Back | رجوع')
+        return await msg.reply(session.data.appointment ? buildSummary(session.data) + '\n\n0️⃣ Back | رجوع' : ' No upcoming appointment | لا يوجد موعد حالي\n\n0️⃣ Back | رجوع')
       case '3':
         session.step = 'prices'
         return await msg.reply(SERVICES_INFO_MENU)
@@ -261,11 +261,11 @@ async function handleMessageInner(msg) {
       case '5':
         if (session.data.appointment) {
           session.step = 'cancel_confirm'
-          return await msg.reply(`⚠️ Are you sure you want to cancel your appointment? | هل أنت متأكد من إلغاء الموعد؟\n\n📅 *${session.data.day}* at *${session.data.time}*\n💉 ${session.data.service}\n\n1️⃣ Yes, cancel it | نعم، إلغاء\n2️⃣ No, keep it | لا، الاحتفاظ به`)
+          return await msg.reply(` Are you sure you want to cancel your appointment? | هل أنت متأكد من إلغاء الموعد؟\n\n📅 *${session.data.day}* at *${session.data.time}*\n💉 ${session.data.service}\n\n1️⃣ Yes, cancel it | نعم، إلغاء\n2️⃣ No, keep it | لا، الاحتفاظ به`)
         }
-        return await msg.reply('❌ No appointment to cancel | لا يوجد موعد لإلغائه\n\n0️⃣ Back | رجوع')
+        return await msg.reply(' No appointment to cancel | لا يوجد موعد لإلغائه\n\n0️⃣ Back | رجوع')
       default:
-        return await msg.reply('⚠️ Choose 1–5 | اختر رقم من ١ إلى ٥\n\n' + MAIN_MENU)
+        return await msg.reply(' Choose 1–5 | اختر رقم من ١ إلى ٥\n\n' + MAIN_MENU)
     }
   }
 if (session.step === 'cancel_confirm') {
