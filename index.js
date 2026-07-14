@@ -34,7 +34,7 @@ function saveSessions() {
 
 const { Client, LocalAuth } = require('whatsapp-web.js')
 const qrcode = require('qrcode-terminal')
-const { saveBooking, checkSlot, cancelBooking } = require('./notify')
+const { saveBooking, checkSlot, cancelBooking, askCustomerService } = require('./notify')
 const { parsePhoneNumberFromString } = require('libphonenumber-js')
 const processedMessageIds = new Set()
 const MAX_PROCESSED_IDS = 500
@@ -72,32 +72,84 @@ const client = new Client({
 })
 
 const CLINIC = {
-  name: 'ClinicIQ',
-  phone: '+20 100 000 0000',
+  name: 'MeroSculp',
+  phone: '+20 103 117 7998',
   services: {
-    '1': { name: 'Rhinoplasty (Nose Job) ', duration: '3 hrs' },
-    '2': { name: 'Tummy Tuck ', duration: '4 hrs' },
-    '3': { name: 'Facelift / Neck Lift ', duration: '3 hrs' },
-    '4': { name: 'BBL – Brazilian Butt Lift ', duration: '4 hrs' },
-    '5': { name: 'Breast Lift ', duration: '3 hrs' },
-    '6': { name: 'Breast Reduction ', duration: '4 hrs' },
-    '7': { name: 'Arm Lift ', duration: '3 hrs' },
-    '8': { name: 'Thigh Lift ', duration: '4 hrs' },
+    '1': { name: 'Rhinoplasty (Nose Job)' },
+    '2': { name: 'Tummy Tuck' },
+    '3': { name: 'Facelift / Neck Lift' },
+    '4': { name: 'BBL – Brazilian Butt Lift' },
+    '5': { name: 'Breast Lift' },
+    '6': { name: 'Breast Reduction' },
+    '7': { name: 'Arm Lift' },
+    '8': { name: 'Thigh Lift' },
+    '9': { name: 'Otoplasty (Ear Reshaping)' },
+    '10': { name: 'Gynecomastia Treatment' },
+    '11': { name: 'Back Lift & Butt Lift' },
+    '12': { name: 'Liposuction & Body Contouring' },
+    '13': { name: 'Mommy Makeover' },
   },
   slots: {
-    '1': '09:00',
-    '2': '11:00',
-    '3': '13:00',
-    '4': '15:00',
-    '5': '17:00',
-  },
-  days: {
-    '1': 'Sunday',
-    '2': 'Monday',
-    '3': 'Tuesday',
-    '4': 'Wednesday',
-    '5': 'Thursday',
+    '1': '17:00',
+    '2': '18:00',
+    '3': '19:00',
+    '4': '20:00',
+    '5': '21:00',
+    '6': '22:00',
   }
+}
+
+const ARABIC_DAY_NAMES = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت']
+
+function formatDateArabic(dateStr) {
+  if (!dateStr) return '—'
+  const [y, m, d] = dateStr.split('-').map(Number)
+  const dateObj = new Date(y, m - 1, d)
+  const dayName = ARABIC_DAY_NAMES[dateObj.getDay()]
+  const dd = String(d).padStart(2, '0')
+  const mm = String(m).padStart(2, '0')
+  return `${dayName} ${dd}/${mm}`
+}
+
+function formatTime12h(timeStr) {
+  if (!timeStr) return '—'
+  const [h] = timeStr.split(':').map(Number)
+  const h12 = h > 12 ? h - 12 : h
+  return `${h12}:00 م`
+}
+
+// Generates the next available consultation dates: starts tomorrow, looks
+// up to 7 calendar days ahead, skips Friday/Saturday (clinic closed).
+// Always yields exactly 5 dates since any 7-day window contains exactly
+// one Friday and one Saturday.
+function getAvailableDates() {
+  const dates = []
+  const today = new Date()
+  for (let offset = 1; offset <= 7 && dates.length < 5; offset++) {
+    const d = new Date(today)
+    d.setDate(d.getDate() + offset)
+    const dow = d.getDay() // 0=Sun ... 6=Sat
+    if (dow === 5 || dow === 6) continue
+    const yyyy = d.getFullYear()
+    const mm = String(d.getMonth() + 1).padStart(2, '0')
+    const dd = String(d.getDate()).padStart(2, '0')
+    dates.push(`${yyyy}-${mm}-${dd}`)
+  }
+  return dates
+}
+
+const DAY_NUM_EMOJI = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣']
+
+function buildDaysMenu() {
+  const dates = getAvailableDates()
+  const map = {}
+  const lines = dates.map((dateStr, i) => {
+    const num = String(i + 1)
+    map[num] = dateStr
+    return `${DAY_NUM_EMOJI[i]} ${formatDateArabic(dateStr)}`
+  })
+  const menuText = `📅 *اختر يوم الاستشارة*\n\n${lines.join('\n')}\n\n0️⃣ رجوع\n\n🕔 مواعيد العمل: من الساعة ٥ م حتى ١١ م`
+  return { menuText, map }
 }
 
 const sessions = loadSessions()
@@ -116,46 +168,50 @@ function resetSession(sender) {
   sessions[sender] = { step: 'idle', data: existingAppointment }
 }
 
-const MAIN_MENU = `🏥 *MeroSculp* — مساعد الحجز
+const MAIN_MENU = `🏥 *مرحبًا بك في MeroSculp* 🌷
 
-1️⃣ حجز موعد
-2️⃣ موعدي
-3️⃣ الخدمات
-4️⃣ تواصل معنا
-5️⃣ إلغاء الموعد
+يسعدنا خدمتك والإجابة على جميع استفساراتك.
+يرجى اختيار رقم من القائمة التالية:
 
-_اختر رقم من القائمة_`
+1️⃣ 📅 حجز استشارة مجانية اون لاين
+2️⃣ 🔪 الخدمات والعمليات
+3️⃣ 🎉 العروض الحالية
+4️⃣ ❓ الأسئلة الشائعة
+5️⃣ 🗒️ موعدي
+6️⃣ 💬 الشكاوى والاستفسارات
 
-const SERVICES_MENU = `💉 *اختر الخدمة*
+✨ يرجى الرد برقم الخيار المطلوب، وسيتم خدمتك في أسرع وقت`
+
+const SERVICES_MENU = `🔪 *اختر العملية التي ترغب في حجز استشارة مجانية بشأنها*
+
+يرجى الرد برقم العملية المطلوبة:
 
 1️⃣ تجميل الأنف
 2️⃣ شد البطن
 3️⃣ شد الوجه والرقبة
-4️⃣ شد وتكبير الأرداف
-5️⃣ شد الثدي
+4️⃣ شد وتكبير الأرداف (BBL)
+5️⃣ رفع الثدي
 6️⃣ تصغير الثدي
 7️⃣ شد الذراعين
 8️⃣ شد الفخذين
+9️⃣ تجميل الأذن
+🔟 علاج التثدي
+1️⃣1️⃣ شد الظهر ورفع المؤخرة
+1️⃣2️⃣ شفط الدهون ونحت الجسم
+1️⃣3️⃣ مامي ميك أوفر (Mommy Makeover)
 
-0️⃣ رجوع`
+0️⃣ الرجوع للقائمة الرئيسية
 
-const DAYS_MENU = `📅 *اختر اليوم*
+💬 يرجى إرسال رقم العملية، وسيتم حجز استشارة ومساعدتك في أسرع وقت`
 
-1️⃣ الأحد
-2️⃣ الإثنين
-3️⃣ الثلاثاء
-4️⃣ الأربعاء
-5️⃣ الخميس
+const SLOTS_MENU = `🕐 *اختر وقت الاستشارة*
 
-0️⃣ رجوع`
-
-const SLOTS_MENU = `🕐 *اختر الوقت*
-
-1️⃣ ٩:٠٠ ص
-2️⃣ ١١:٠٠ ص
-3️⃣ ١:٠٠ م
-4️⃣ ٣:٠٠ م
-5️⃣ ٥:٠٠ م
+1️⃣ 5:00 م – 6:00 م
+2️⃣ 6:00 م – 7:00 م
+3️⃣ 7:00 م – 8:00 م
+4️⃣ 8:00 م – 9:00 م
+5️⃣ 9:00 م – 10:00 م
+6️⃣ 10:00 م – 11:00 م
 
 0️⃣ رجوع`
 
@@ -166,7 +222,7 @@ const PATIENT_TYPE_MENU = `🏥 *هل أنت*
 
 0️⃣ رجوع`
 
-const SERVICES_INFO_MENU = `💉 *ما نقدمه في MeroSculp*
+const SERVICES_INFO_MENU = `🔪 *ما نقدمه في MeroSculp*
 
 في MeroSculp، يقدم الدكتور خدمات تجميلية متخصصة بأحدث التقنيات وأعلى معايير السلامة، مع متابعة كاملة قبل وبعد العملية.
 
@@ -174,32 +230,124 @@ const SERVICES_INFO_MENU = `💉 *ما نقدمه في MeroSculp*
  *شد البطن* — إزالة الجلد الزائد وشد عضلات البطن
  *شد الوجه والرقبة* — تقليل علامات التقدم في السن وإعادة الشباب للملامح
  *شد وتكبير الأرداف* — إعادة تشكيل الجسم عبر نقل الدهون
- *شد الثدي* — رفع وتحسين شكل الثدي
+ *رفع الثدي* — رفع وتحسين شكل الثدي
  *تصغير الثدي* — تقليل الحجم لراحة أكبر وتناسق أفضل
  *شد الذراعين* — إزالة الترهلات وشد الجلد
  *شد الفخذين* — تحسين شكل ومظهر الفخذين
+ *تجميل الأذن* — إعادة تشكيل الأذن لمظهر متناسق
+ *علاج التثدي* — إزالة الأنسجة الدهنية والغدية الزائدة لدى الرجال
+ *شد الظهر ورفع المؤخرة* — شد الجلد المترهل ورفع المؤخرة
+ *شفط الدهون ونحت الجسم* — إزالة الدهون الموضعية وتحسين تناسق الجسم
+ *مامي ميك أوفر* — باقة شاملة لإعادة تشكيل الجسم بعد الحمل والولادة
 
 _للأسعار والتفاصيل، تواصل معنا مباشرة_
 
 0️⃣ رجوع`
 
-const CONTACT_MENU = `📞 *تواصل مع ميروسكلب*
+const OFFERS_MENU = `🎉 *العروض الحالية*
 
-📱 WhatsApp: +20 103 117 7998
-📍 القاهرة الجديدة
-🕐 الأحد–الخميس، ٩ص–٥م
+للاطلاع على أحدث العروض والخصومات، يُرجى زيارة صفحتنا على Instagram، حيث يتم تحديث العروض بشكل مستمر.
 
-1️⃣ حجز موعد
+✨ قد تجد أيضًا:
+
+- عروض موسمية لفترة محدودة
+- عروض خاصة للمرضى السابقين
+- خصومات عند إجراء أكثر من عملية في نفس الوقت
+- باقات وعروض حصرية قد لا تكون متاحة في أي مكان آخر
+
+📲 يرجى زيارة صفحتنا على Instagram لمعرفة أحدث العروض المتاحة
+
+0️⃣ القائمة الرئيسية`
+
+// TODO: placeholder — real FAQ content not provided yet
+const FAQ_MENU = `❓ *الأسئلة الشائعة*
+
+_سيتم إضافة الأسئلة الشائعة قريباً._
+
 0️⃣ رجوع`
 
+const MANAGE_MENU = `🗒️ *إدارة موعدي*
+
+اختر الخدمة المطلوبة:
+
+1️⃣ 📋 عرض تفاصيل الموعد
+2️⃣ ✏️ تعديل الموعد
+3️⃣ ❌ إلغاء الموعد
+4️⃣ ⏰ تذكيري بموعدي
+6️⃣ 📞 التواصل مع خدمة العملاء
+
+0️⃣ 🏠 القائمة الرئيسية
+
+💬 يرجى الرد برقم الخيار المطلوب`
+
+const REMINDER_MENU = `⏰ *تذكير بموعد الاستشارة*
+
+اختر موعد التذكير المناسب:
+
+1️⃣ قبل الموعد بيومين
+2️⃣ قبل الموعد بيوم
+3️⃣ قبل الموعد بـ 6 ساعات
+4️⃣ قبل الموعد بساعة
+5️⃣ إيقاف التذكير
+
+0️⃣ 🏠 القائمة الرئيسية`
+
+const CUSTOMER_SERVICE_INTRO = `💬 *الشكاوى والاستفسارات*
+
+اكتب سؤالك أو استفسارك وسنقوم بالرد عليك في أقرب وقت.
+
+0️⃣ رجوع للقائمة الرئيسية`
+
+const REMINDER_LABELS = {
+  '1': 'قبل الموعد بيومين',
+  '2': 'قبل الموعد بيوم',
+  '3': 'قبل الموعد بـ 6 ساعات',
+  '4': 'قبل الموعد بساعة',
+  '5': 'تم إيقاف التذكير',
+}
+
 function buildSummary(data) {
-  return `📋 *ملخص الموعد*
+  return `📋 *ملخص الحجز*
 
 👤 الاسم: ${data.name || '—'}
-📱 الهاتف: ${data.phone || '—'}
-💉 الخدمة: ${data.service || '—'}
-📅 اليوم: ${data.day || '—'}
-🕐 الوقت: ${data.time || '—'}`
+📱 رقم الهاتف: ${data.phone || '—'}
+🔪 العملية: ${data.service || '—'}
+📅 اليوم: ${formatDateArabic(data.day)}
+🕐 الوقت: ${formatTime12h(data.time)}`
+}
+
+function buildBookingReview(data) {
+  return `${buildSummary(data)}
+
+اختر أحد الخيارات التالية:
+
+1️⃣ ✅ تأكيد الحجز
+2️⃣ ✏️ تعديل البيانات
+0️⃣ 🏠 القائمة الرئيسية`
+}
+
+function buildConfirmationMessage(data) {
+  return `🎉 *تم تأكيد حجز الاستشارة بنجاح!*
+
+📋 تفاصيل الموعد:
+
+👤 الاسم: ${data.name}
+📱 رقم الهاتف: ${data.phone}
+🔪 العملية: ${data.service}
+📅 اليوم: ${formatDateArabic(data.day)}
+🕐 الوقت: ${formatTime12h(data.time)}
+
+💻 الاستشارة ستكون أونلاين عبر Google Meet.
+
+📲 سيتم إرسال رابط الاستشارة على نفس رقم الواتساب قبل الموعد، ويكفي الضغط على الرابط في موعد الاستشارة للدخول والتحدث مباشرة مع الدكتور.
+
+⏰ يرجى التواجد قبل الموعد بـ 5 دقائق والتأكد من وجود اتصال جيد بالإنترنت.
+
+🌷 نتمنى لك تجربة مميزة، وفي انتظار حضورك.
+
+اكتب *menu* في أي وقت للرجوع إلى القائمة الرئيسية.
+
+— فريق MeroSculp`
 }
 
 async function handleMessage(msg) {
@@ -218,9 +366,8 @@ async function handleMessageInner(msg) {
   //console.log(' Incoming from:', msg.from)
 
    //TESTING MODE — only respond to this number
-   //const ALLOWED = ['201558533440@c.us', '214830002753718@lid', '966594544343@c.us', '172868155510964@lid']
-  //if (!ALLOWED.includes(msg.from)) return
-
+   const ALLOWED = ['201558533440@c.us', '214830002753718@lid', '966594544343@c.us', '172868155510964@lid', '238830783328471@lid']
+  if (!ALLOWED.includes(msg.from)) return
   const sender = msg.from
   const text = msg.body.trim()
 
@@ -244,31 +391,97 @@ async function handleMessageInner(msg) {
   if (session.step === 'main_menu') {
     switch (text) {
       case '1':
-        case '1':
         if (session.data.appointment) {
-          return await msg.reply(` لديك حجز :\n\n${buildSummary(session.data)}\n\n5️⃣ Cancel it first before booking again | يرجى إلغاء الحجز الحالي أولاً قبل حجز موعد جديد`)
+          return await msg.reply(`لديك حجز حالي:\n\n${buildSummary(session.data)}\n\nيرجى إلغاء الحجز الحالي أولاً من "5️⃣ موعدي" قبل حجز استشارة جديدة.`)
         }
         session.step = 'select_service'
         return await msg.reply(SERVICES_MENU)
       case '2':
-        return await msg.reply(session.data.appointment ? buildSummary(session.data) + '\n\n0️⃣ Back | رجوع' : ' No upcoming appointment | لا يوجد موعد حالي\n\n0️⃣ Back | رجوع')
-      case '3':
-        session.step = 'prices'
+        session.step = 'services_info'
         return await msg.reply(SERVICES_INFO_MENU)
+      case '3':
+        session.step = 'offers'
+        return await msg.reply(OFFERS_MENU)
       case '4':
-        session.step = 'contact'
-        return await msg.reply(CONTACT_MENU)
+        session.step = 'faq'
+        return await msg.reply(FAQ_MENU)
       case '5':
         if (session.data.appointment) {
-          session.step = 'cancel_confirm'
-          return await msg.reply(` هل أنت متأكد من إلغاء الموعد؟\n\n📅 *${session.data.day}* at *${session.data.time}*\n💉 ${session.data.service}\n\n1️⃣ Yes, cancel it | نعم، إلغاء\n2️⃣ No, keep it | لا، الاحتفاظ به`)
+          session.step = 'manage_appointment'
+          return await msg.reply(MANAGE_MENU)
         }
-        return await msg.reply('لا يوجد موعد لإلغائه\n\n0️⃣ Back | رجوع')
+        return await msg.reply('🗒️ لا يوجد لديك موعد حالياً.\n\n' + MAIN_MENU)
+      case '6':
+        session.step = 'customer_service'
+        return await msg.reply(CUSTOMER_SERVICE_INTRO)
       default:
-        return await msg.reply(' ⚠️اختر رقم من ١ إلى ٥\n\n' + MAIN_MENU)
+        return await msg.reply(' ⚠️اختر رقم من ١ إلى ٦\n\n' + MAIN_MENU)
     }
   }
-if (session.step === 'cancel_confirm') {
+
+  if (session.step === 'services_info') {
+    if (text === '0') { session.step = 'main_menu'; return await msg.reply(MAIN_MENU) }
+    return await msg.reply(' ⚠️الرجاء الرد بـ 0️⃣ للرجوع\n\n' + SERVICES_INFO_MENU)
+  }
+
+  if (session.step === 'offers') {
+    if (text === '0') { session.step = 'main_menu'; return await msg.reply(MAIN_MENU) }
+    return await msg.reply(' ⚠️الرجاء الرد بـ 0️⃣ للرجوع\n\n' + OFFERS_MENU)
+  }
+
+  if (session.step === 'faq') {
+    if (text === '0') { session.step = 'main_menu'; return await msg.reply(MAIN_MENU) }
+    return await msg.reply(' ⚠️الرجاء الرد بـ 0️⃣ للرجوع\n\n' + FAQ_MENU)
+  }
+
+  if (session.step === 'manage_appointment') {
+    switch (text) {
+      case '1':
+        return await msg.reply(buildSummary(session.data) + '\n\n' + MANAGE_MENU)
+      case '2':
+        if (session.data.rowNumber) {
+          await cancelBooking(session.data.rowNumber)
+        }
+        session.data = {}
+        session.step = 'select_service'
+        return await msg.reply('✏️ *تعديل الموعد*\n\nسنقوم بحجز استشارة جديدة بالبيانات المعدّلة.\n\n' + SERVICES_MENU)
+      case '3':
+        session.step = 'cancel_confirm'
+        return await msg.reply(`هل أنت متأكد من إلغاء الموعد؟\n\n📅 *${formatDateArabic(session.data.day)}* الساعة *${formatTime12h(session.data.time)}*\n🔪 ${session.data.service}\n\n1️⃣ نعم، إلغاء\n2️⃣ لا، الاحتفاظ به`)
+      case '4':
+        session.step = 'reminder_menu'
+        return await msg.reply(REMINDER_MENU)
+      case '6':
+        session.step = 'customer_service'
+        return await msg.reply(CUSTOMER_SERVICE_INTRO)
+      case '0':
+        session.step = 'main_menu'
+        return await msg.reply(MAIN_MENU)
+      default:
+        return await msg.reply('⚠️ اختر رقم من الخيارات المتاحة\n\n' + MANAGE_MENU)
+    }
+  }
+
+  if (session.step === 'reminder_menu') {
+    if (REMINDER_LABELS[text]) {
+      session.data.reminderPref = text
+      session.step = 'main_menu'
+      return await msg.reply(`✅ تم ضبط التذكير: ${REMINDER_LABELS[text]}\n\n` + MAIN_MENU)
+    }
+    if (text === '0') { session.step = 'main_menu'; return await msg.reply(MAIN_MENU) }
+    return await msg.reply('⚠️ اختر رقم من ١ إلى ٥\n\n' + REMINDER_MENU)
+  }
+
+  if (session.step === 'customer_service') {
+    if (text === '0' || text.toLowerCase() === 'back' || text === 'رجوع') {
+      session.step = 'main_menu'
+      return await msg.reply(MAIN_MENU)
+    }
+    const reply = await askCustomerService(sender, text)
+    return await msg.reply(reply + '\n\n_اكتب سؤالك التالي، أو 0️⃣ للرجوع للقائمة الرئيسية_')
+  }
+
+  if (session.step === 'cancel_confirm') {
     if (text === '1') {
       if (session.data.rowNumber) {
         await cancelBooking(session.data.rowNumber)
@@ -284,17 +497,6 @@ if (session.step === 'cancel_confirm') {
     return await msg.reply(' ⚠️الرجاء الرد بـ ١ للإلغاء أو ٢ للاحتفاظ بالموعد')
   }
 
-  if (session.step === 'prices') {
-    if (text === '0') { session.step = 'main_menu'; return await msg.reply(MAIN_MENU) }
-    return await msg.reply(' ⚠️الرجاء الرد بـ 0️⃣ للرجوع\n\n' + SERVICES_INFO_MENU)
-  }
-
-  if (session.step === 'contact') {
-    if (text === '0') { session.step = 'main_menu'; return await msg.reply(MAIN_MENU) }
-    if (text === '1') { session.step = 'select_service'; return await msg.reply(SERVICES_MENU) }
-    return await msg.reply('⚠️الرجاء الرد بـ 0 للرجوع أو 1 للحجز\n\n' + CONTACT_MENU)
-  }
-
   if (session.step === 'select_service') {
     if (text === '0') { session.step = 'main_menu'; return await msg.reply(MAIN_MENU) }
     if (CLINIC.services[text]) {
@@ -302,60 +504,62 @@ if (session.step === 'cancel_confirm') {
       session.step = 'patient_type'
       return await msg.reply(PATIENT_TYPE_MENU)
     }
-  return await msg.reply('⚠️ اختر رقم من ١ إلى ٨\n\n' + SERVICES_MENU)  }
+    return await msg.reply('⚠️ اختر رقم من ١ إلى ١٣\n\n' + SERVICES_MENU)
+  }
 
   if (session.step === 'patient_type') {
     if (text === '0') { session.step = 'select_service'; return await msg.reply(SERVICES_MENU) }
     if (text === '1' || text === '2') {
       session.data.patientType = text === '1' ? 'New Patient' : 'Returning Patient'
       session.step = 'select_day'
-      return await msg.reply(DAYS_MENU)
+      return await msg.reply(buildDaysMenu().menuText)
     }
     return await msg.reply('⚠️الرجاء الرد بـ ١ أو ٢\n\n' + PATIENT_TYPE_MENU)
   }
 
   if (session.step === 'select_day') {
-    if (text === '0') { 
+    if (text === '0') {
       session.step = 'patient_type'
       return await msg.reply(PATIENT_TYPE_MENU)
     }
-    if (CLINIC.days[text]) {
-      session.data.day = CLINIC.days[text]
+    const { menuText, map } = buildDaysMenu()
+    if (map[text]) {
+      session.data.day = map[text] // stored as YYYY-MM-DD
       session.step = 'select_time'
       return await msg.reply(SLOTS_MENU)
     }
-    return await msg.reply('⚠️ اختر رقم من ١ إلى ٥\n\n' + DAYS_MENU)
+    return await msg.reply('⚠️ اختر رقم من الأيام المتاحة\n\n' + menuText)
   }
 
   if (session.step === 'select_time') {
-    if (text === '0') { session.step = 'select_day'; return await msg.reply(DAYS_MENU) }
+    if (text === '0') { session.step = 'select_day'; return await msg.reply(buildDaysMenu().menuText) }
     if (CLINIC.slots[text]) {
       session.data.time = CLINIC.slots[text]
 
       // Check for clashes before proceeding
       const available = await checkSlot(session.data.day, session.data.time)
       if (!available) {
-        return await msg.reply(` Sorry, *${session.data.day}* at *${session.data.time}* is already booked | عذراً، هذا الموعد محجوز \n\nPlease choose another time | يرجى اختيار وقت آخر:\n\n` + SLOTS_MENU)
+        return await msg.reply(` عذراً، هذا الموعد محجوز بالفعل.\n\nيرجى اختيار وقت آخر:\n\n` + SLOTS_MENU)
       }
 
       session.step = 'enter_name'
-      return await msg.reply('*ما هو اسمك الكامل؟*')
+      return await msg.reply('👤 *يرجى كتابة اسمك الثنائي*')
     }
-    return await msg.reply('⚠️اختر رقم من ١ إلى ٥\n\n' + SLOTS_MENU)
+    return await msg.reply('⚠️اختر رقم من ١ إلى ٦\n\n' + SLOTS_MENU)
   }
 
   if (session.step === 'enter_name') {
     const nameValid = /^[a-zA-Z\u0600-\u06FF\s]{3,50}$/.test(text)
     if (!nameValid) {
-      return await msg.reply('⚠️الرجاءإدخال اسمك الكامل - )')
+      return await msg.reply('⚠️الرجاء إدخال اسمك الثنائي')
     }
     session.data.name = text.trim()
     session.step = 'enter_phone'
-    return await msg.reply('*رقم هاتفك؟*\n_(لتأكيد الموعد)_')
+    return await msg.reply('📱 *يرجى كتابة رقم هاتفك*\n_(لتأكيد الموعد)_')
   }
 
   if (session.step === 'enter_phone') {
-    if (text === '0') { session.step = 'enter_name'; return await msg.reply('*ما هو اسمك الكامل؟*') }
+    if (text === '0') { session.step = 'enter_name'; return await msg.reply('👤 *يرجى كتابة اسمك الثنائي*') }
 
     const phoneNumber = parsePhoneNumberFromString(text, 'EG') // defaults to Egypt if no + given
 
@@ -365,22 +569,18 @@ if (session.step === 'cancel_confirm') {
 
     session.data.phone = phoneNumber.number
     session.step = 'confirm'
-    return await msg.reply(buildSummary(session.data) + `
-
-1️⃣ تأكيد
-2️⃣ البدء من جديد
-0️⃣ رجوع`)
+    return await msg.reply('📋 *مراجعة بيانات الحجز*\n\nيرجى مراجعة البيانات التالية قبل تأكيد الموعد:\n\n' + buildBookingReview(session.data))
   }
 
   if (session.step === 'confirm') {
-    if (text === '0') { 
-      session.step = 'main_menu'; 
-      return await msg.reply(MAIN_MENU) 
+    if (text === '0') {
+      session.step = 'main_menu';
+      return await msg.reply(MAIN_MENU)
     }
-    if (text === '2') { 
-      resetSession(sender); 
-      sessions[sender].step = 'main_menu'; 
-      return await msg.reply(MAIN_MENU) 
+    if (text === '2') {
+      resetSession(sender);
+      sessions[sender].step = 'main_menu';
+      return await msg.reply(MAIN_MENU)
     }
     if (text === '1') {
       console.log(`\n✅ NEW BOOKING`)
@@ -404,7 +604,7 @@ if (session.step === 'cancel_confirm') {
       }, rowNumber)
 
       if (!success) {
-        return await msg.reply(`⚠️ Something went wrong saving your booking. Please try again or contact us directly.\n\n${CONTACT_MENU}`)
+        return await msg.reply(`⚠️ Something went wrong saving your booking. Please try again or contact us directly at ${CLINIC.phone}.`)
       }
 
       session.data.appointment = true
@@ -414,16 +614,9 @@ if (session.step === 'cancel_confirm') {
 
       console.log(`   At:      ${bookedAt}\n`)
 
-      return await msg.reply(`🎉*تم تأكيد الحجز!*
-
-${buildSummary(session.data)}
-
-See you on *${session.data.day}* at *${session.data.time}* | نراك يوم *${session.data.day}* الساعة *${session.data.time}* 🏥
-اكتب *menu* في أي وقت لإدارة موعدك
-
-— MeroSculp Team`)
+      return await msg.reply(buildConfirmationMessage(session.data))
     }
-    return await msg.reply('⚠️الرجاء الرد بـ ١ للتأكيد أو ٢ للبدء من جديد')
+    return await msg.reply('⚠️الرجاء الرد بـ ١ للتأكيد أو ٢ لتعديل البيانات')
   }
 
   return
@@ -447,6 +640,7 @@ client.on('auth_failure', () => {
 })
 
 client.on('message', async (msg) => {
+  console.log('🔍 RAW EVENT:', { from: msg.from, type: msg.type, fromMe: msg.fromMe, body: msg.body })
   if (msg.fromMe) return
   if (isDuplicateMessage(msg)) {
     console.log('⏭️ Skipped duplicate message:', msg.id?._serialized)

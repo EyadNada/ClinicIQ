@@ -1,6 +1,9 @@
 const axios = require('axios')
 
 const N8N_WEBHOOK_URL = 'https://cliniciq.app.n8n.cloud/webhook/ClinicIQ-Booking'
+const CHECK_SLOT_URL = 'https://cliniciq.app.n8n.cloud/webhook/check-GLOBAL-slot'
+const CANCEL_URL = 'https://cliniciq.app.n8n.cloud/webhook/ClinicIQ-Cancel'
+const CUSTOMER_SERVICE_URL = 'https://cliniciq.app.n8n.cloud/webhook/ClinicIQ-CustomerService'
 
 async function saveBooking(data, rowNumber) {
   try {
@@ -31,7 +34,7 @@ async function saveBooking(data, rowNumber) {
 
 async function checkSlot(day, time) {
   try {
-    const response = await axios.get('https://cliniciq.app.n8n.cloud/webhook/check-GLOBAL-slot', {
+    const response = await axios.get(CHECK_SLOT_URL, {
       params: { day, time }
     })
     return response.data.available
@@ -43,7 +46,7 @@ async function checkSlot(day, time) {
 
 async function cancelBooking(rowNumber) {
   try {
-    await axios.post('https://cliniciq.app.n8n.cloud/webhook/ClinicIQ-Cancel', {
+    await axios.post(CANCEL_URL, {
       rowNumber,
       status: 'Cancelled'
     })
@@ -53,4 +56,18 @@ async function cancelBooking(rowNumber) {
   }
 }
 
-module.exports = { saveBooking, checkSlot, cancelBooking }
+async function askCustomerService(sender, question) {
+  try {
+    const response = await axios.post(CUSTOMER_SERVICE_URL, { sender, question })
+    if (response.data && response.data.reply) {
+      return response.data.reply
+    }
+    console.error(' customer service webhook returned unexpected response:', response.data)
+    return '⚠️ عذراً، حدث خطأ أثناء معالجة سؤالك. يرجى المحاولة لاحقاً أو التواصل معنا مباشرة على +20 103 117 7998.'
+  } catch (err) {
+    console.error(' n8n customer service webhook error:', err.message)
+    return '⚠️ عذراً، حدث خطأ أثناء معالجة سؤالك. يرجى المحاولة لاحقاً أو التواصل معنا مباشرة على +20 103 117 7998.'
+  }
+}
+
+module.exports = { saveBooking, checkSlot, cancelBooking, askCustomerService }
