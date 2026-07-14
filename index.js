@@ -259,7 +259,7 @@ const OFFERS_MENU = `🎉 *العروض الحالية*
 
 0️⃣ القائمة الرئيسية`
 
-// TODO: placeholder — real FAQ content not provided yet
+// TODO: placeholder; FAQ
 const FAQ_MENU = `❓ *الأسئلة الشائعة*
 
 _سيتم إضافة الأسئلة الشائعة قريباً._
