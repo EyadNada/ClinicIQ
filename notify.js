@@ -1,73 +1,100 @@
-const axios = require('axios')
+require('dotenv').config()
 
-const N8N_WEBHOOK_URL = 'https://cliniciq.app.n8n.cloud/webhook/ClinicIQ-Booking'
-const CHECK_SLOT_URL = 'https://cliniciq.app.n8n.cloud/webhook/check-GLOBAL-slot'
-const CANCEL_URL = 'https://cliniciq.app.n8n.cloud/webhook/ClinicIQ-Cancel'
-const CUSTOMER_SERVICE_URL = 'https://cliniciq.app.n8n.cloud/webhook/ClinicIQ-CustomerService'
+const CREDENTIALS = {
+  client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+  private_key: process.env.GOOGLE_PRIVATE_KEY ? process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n') : '',
+}
+const SHEET_ID = process.env.GOOGLE_SHEET_ID
+
+let doc;
+let sheet;
+
+async function initSheet() {
+  if (!doc) {
+    if (!CREDENTIALS.client_email || !CREDENTIALS.private_key || !SHEET_ID) {
+      console.warn('⚠️ Google Sheets configuration missing in .env')
+      return null
+    }
+    
+    // Import GoogleSpreadsheet and JWT dynamically so it doesn't crash if packages aren't fully resolved yet
+    const { GoogleSpreadsheet } = require('google-spreadsheet')
+    const { JWT } = require('google-auth-library')
+
+    const serviceAccountAuth = new JWT({
+      email: CREDENTIALS.client_email,
+      key: CREDENTIALS.private_key,
+      scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+    })
+
+    doc = new GoogleSpreadsheet(SHEET_ID, serviceAccountAuth)
+    await doc.loadInfo() 
+    
+    // Assumes the first sheet (index 0) in your document is the bookings sheet
+    sheet = doc.sheetsByIndex[0]
+  }
+  return sheet
+}
 
 async function saveBooking(data, rowNumber) {
   try {
-    const response = await axios.post(N8N_WEBHOOK_URL, {
-      rowNumber,
-      name: data.name,
-      phone: data.phone,
-      service: data.service,
-      day: data.day,
-      time: data.time,
-      patientType: data.patientType,
-      bookedAt: data.bookedAt,
-      status: 'Confirmed'
+    const s = await initSheet()
+    if (!s) return false
+
+    await s.addRow({
+      RowNumber: rowNumber,
+      Name: data.name,
+      Phone: data.phone,
+      Service: data.service,
+      Day: data.day,
+      Time: data.time,
+      PatientType: data.patientType,
+      BookedAt: data.bookedAt,
+      Status: 'Confirmed'
     })
 
-    if (!response.data || response.data.success !== true) {
-      console.error(' n8n reported failure or unexpected response:', response.data)
-      return false
-    }
-
-    console.log(' booking confirmed written to sheet')
+    console.log('✅ booking confirmed written directly to Google Sheets')
     return true
   } catch (err) {
-    console.error(' n8n webhook error:', err.message)
+    console.error('❌ google sheets webhook error:', err.message)
     return false
   }
 }
 
 async function checkSlot(day, time) {
   try {
-    const response = await axios.get(CHECK_SLOT_URL, {
-      params: { day, time }
-    })
-    return response.data.available
+    const s = await initSheet()
+    if (!s) return true // default to allow booking if not configured
+    
+    const rows = await s.getRows()
+    const isBooked = rows.some(r => r.get('Day') === day && r.get('Time') === time && r.get('Status') !== 'Cancelled')
+    
+    return !isBooked 
   } catch (err) {
-    console.error(' clash check error:', err.message)
-    return true // if check fails, allow booking to continue
+    console.error('❌ sheet clash check error:', err.message)
+    return true 
   }
 }
 
 async function cancelBooking(rowNumber) {
   try {
-    await axios.post(CANCEL_URL, {
-      rowNumber,
-      status: 'Cancelled'
-    })
-    console.log(' sent cancellation to n8n')
+    const s = await initSheet()
+    if (!s) return
+    
+    const rows = await s.getRows()
+    const rowToCancel = rows.find(r => r.get('RowNumber') == rowNumber)
+    if (rowToCancel) {
+      rowToCancel.set('Status', 'Cancelled')
+      await rowToCancel.save()
+      console.log('✅ sent cancellation directly to Google Sheets')
+    }
   } catch (err) {
-    console.error(' n8n cancel webhook error:', err.message)
+    console.error('❌ sheet cancel error:', err.message)
   }
 }
 
 async function askCustomerService(sender, question) {
-  try {
-    const response = await axios.post(CUSTOMER_SERVICE_URL, { sender, question })
-    if (response.data && response.data.reply) {
-      return response.data.reply
-    }
-    console.error(' customer service webhook returned unexpected response:', response.data)
-    return '⚠️ عذراً، حدث خطأ أثناء معالجة سؤالك. يرجى المحاولة لاحقاً أو التواصل معنا مباشرة على +20 103 117 7998.'
-  } catch (err) {
-    console.error(' n8n customer service webhook error:', err.message)
-    return '⚠️ عذراً، حدث خطأ أثناء معالجة سؤالك. يرجى المحاولة لاحقاً أو التواصل معنا مباشرة على +20 103 117 7998.'
-  }
+  // Since n8n is removed, customer service fallback directly to front desk phone
+  return '⚠️ عذراً، لا يمكن معالجة الأسئلة حالياً. يرجى التواصل معنا مباشرة على +20 103 117 7998.'
 }
 
 module.exports = { saveBooking, checkSlot, cancelBooking, askCustomerService }
