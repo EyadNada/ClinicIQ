@@ -10,7 +10,7 @@ No manual booking. No missed follow-ups. Every patient interaction becomes struc
 
 A clinic running on phone calls and unstructured WhatsApp threads has two failures baked in: bookings get lost or double-handled, and none of that interaction data is usable for anything afterward. There's no way to see demand by service, drop-off points, or no-show patterns if the "system" is a front desk and a notebook.
 
-ClinicIQ replaces that with a pipeline: intake → orchestration → storage → analytics, all running without a human in the loop.
+ClinicIQ replaces that with a pipeline: intake → storage → analytics, all running without a human in the loop.
 
 ## System overview
 
@@ -21,22 +21,14 @@ Patient (WhatsApp)
 ┌─────────────────────────┐
 │  Intake bot              │  whatsapp-web.js — guided booking
 │  (Node.js)                │  conversation, session state,
-│                            │  validation
+│                            │  validation and conflict checks
 └───────────┬───────────────┘
             │ booking event
             ▼
 ┌─────────────────────────┐
-│  n8n orchestration layer  │  reminders & confirmations,
-│                            │  no-show follow-ups,
-│                            │  routing data downstream
-└───────────┬───────────────┘
-            │
-            ▼
-┌─────────────────────────┐
-│  Data layer                │  Google Sheets (ops-facing,
-│  Sheets + database         │  staff-editable) +
-│                            │  relational database (source
-│                            │  of truth for analytics)
+│  Data layer                │  Google Sheets API directly
+│  Sheets + database         │  integrated via Service Account
+│                            │  (ops-facing, staff-editable)
 └───────────┬───────────────┘
             │
             ▼
@@ -54,14 +46,11 @@ Deployed on Railway for 24/7 uptime, with automatic reconnect on the intake laye
 **Intake (Node.js + whatsapp-web.js)**
 A patient messages the clinic's number and is walked through a structured booking flow — service, day, time, patient type, name, phone — with validation at every step (Egyptian phone formats, name formats, etc.). Session state is tracked per-sender so multiple patients can be mid-booking simultaneously.
 
-**Orchestration (n8n)**
-Once a booking is confirmed, n8n takes over the operational side: confirmation messages, day-before reminders, and no-show follow-ups, plus routing the booking event to storage. Moving this out of the bot process means the clinic's operational logic lives in editable workflows, not in code that needs a redeploy to change a reminder window.
-
-**Storage**
-Bookings land in two places by design: Google Sheets, because that's the interface clinic staff already know and can act on directly, and a relational database, which is the actual source of truth the dashboard reads from. Structured data — service requested, day/time, new vs. returning, booking timestamp, and drop-off point for sessions that don't complete — not just message logs.
+**Storage (Google Sheets API)**
+Once a booking is confirmed, Node.js directly handles the operational side, updating a live Google Sheet using a Service Account. Bookings land directly into the Google Sheet because that's the interface clinic staff already know and can act on directly. Structured data — service requested, day/time, new vs. returning, booking timestamp, and drop-off point for sessions that don't complete — not just message logs. 
 
 **Dashboard**
-A live view over the database: bookings per week, service demand, no-show rate, and where in the booking flow patients abandon the process. That last metric is the one that actually changes clinic decisions — it shows exactly which step of the flow is losing patients.
+A live view over the data: bookings per week, service demand, no-show rate, and where in the booking flow patients abandon the process. That last metric is the one that actually changes clinic decisions — it shows exactly which step of the flow is losing patients.
 
 ## Why it's structured this way (not LLM-based intake)
 
@@ -72,10 +61,8 @@ The booking flow is a deterministic menu system, not free-text NLU. That's a del
 | Layer | Tech |
 |---|---|
 | Intake / messaging | Node.js, whatsapp-web.js |
-| Orchestration | n8n |
-| Operational store | Google Sheets API |
-| Analytics store | Relational database |
-| Dashboard | Live, reading from the analytics store |
+| Data Layer | Google Sheets API, google-spreadsheet |
+| Dashboard | Live analytics |
 | Hosting | Railway + VPS (Hetzner CX-tier) running under PM2 |
 
 ## Roadmap
