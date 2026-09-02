@@ -365,8 +365,8 @@ async function handleMessageInner(msg) {
   if (msg.type !== 'chat') return
   //console.log(' Incoming from:', msg.from)
 
-   //TESTING MODE — only respond to this number
-   const ALLOWED = ['201558533440@c.us', '214830002753718@lid', '966594544343@c.us', '172868155510964@lid', '238830783328471@lid']
+  //TESTING MODE — only respond to this number
+  const ALLOWED = ['201558533440@c.us', '214830002753718@lid', '966594544343@c.us', '172868155510964@lid', '238830783328471@lid']
   if (!ALLOWED.includes(msg.from)) return
   const sender = msg.from
   const text = msg.body.trim()
