@@ -639,14 +639,43 @@ client.on('auth_failure', () => {
   setTimeout(() => client.initialize(), 5000)
 })
 
-client.on('message', async (msg) => {
-  console.log('🔍 RAW EVENT:', { from: msg.from, type: msg.type, fromMe: msg.fromMe, body: msg.body })
-  if (msg.fromMe) return
+client.on('message_create', async (msg) => {
+  console.log('🔍 RAW EVENT:', { from: msg.from, to: msg.to, type: msg.type, fromMe: msg.fromMe, body: msg.body })
+  
+  if (msg.fromMe) {
+    const text = msg.body.trim().toLowerCase()
+    const patientId = msg.to
+    if (text === '//pause' || text === '//mute') {
+      const session = getSession(patientId)
+      session.mutedUntil = Date.now() + (24 * 60 * 60 * 1000) // 24 hours
+      saveSessions()
+      console.log(`🔇 Muted bot for ${patientId}`)
+      await msg.reply('🔇 [System]: Bot paused for 24 hours for this patient.')
+    } else if (text === '//resume' || text === '//unmute') {
+      const session = getSession(patientId)
+      session.mutedUntil = 0
+      saveSessions()
+      console.log(`🔊 Resumed bot for ${patientId}`)
+      await msg.reply('🔊 [System]: Bot resumed for this patient.')
+    }
+    return
+  }
+
   if (isDuplicateMessage(msg)) {
     console.log('⏭️ Skipped duplicate message:', msg.id?._serialized)
     return
   }
-  try { await handleMessage(msg) }
+  try {
+    // Ignore if patient is muted
+    const sender = msg.from
+    const session = getSession(sender)
+    if (session.mutedUntil && Date.now() < session.mutedUntil) {
+      console.log(`🔇 Ignored incoming message from ${sender} (Bot is paused)`)
+      return
+    }
+
+    await handleMessage(msg)
+  }
   catch (err) { console.error('Error:', err) }
 })
 
