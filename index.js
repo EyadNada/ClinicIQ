@@ -365,9 +365,9 @@ async function handleMessageInner(msg) {
   if (msg.type !== 'chat') return
   //console.log(' Incoming from:', msg.from)
 
-  //TESTING MODE — only respond to this number
-  const ALLOWED = ['201558533440@c.us', '214830002753718@lid', '966594544343@c.us', '172868155510964@lid', '238830783328471@lid']
-  if (!ALLOWED.includes(msg.from)) return
+  //TESTING MODE — commented out to allow all users
+  //const ALLOWED = ['201558533440@c.us', '214830002753718@lid', '966594544343@c.us', '172868155510964@lid', '238830783328471@lid']
+  //if (!ALLOWED.includes(msg.from)) return
   const sender = msg.from
   const text = msg.body.trim()
 
@@ -641,7 +641,7 @@ client.on('auth_failure', () => {
 
 client.on('message_create', async (msg) => {
   console.log('🔍 RAW EVENT:', { from: msg.from, to: msg.to, type: msg.type, fromMe: msg.fromMe, body: msg.body })
-  
+
   if (msg.fromMe) {
     const text = msg.body.trim().toLowerCase()
     const patientId = msg.to
@@ -665,6 +665,13 @@ client.on('message_create', async (msg) => {
     console.log('⏭️ Skipped duplicate message:', msg.id?._serialized)
     return
   }
+
+  // Ignore messages older than 5 minutes to prevent responding to synced history on startup
+  const msgTime = (msg.timestamp || Math.floor(Date.now() / 1000)) * 1000
+  if (Date.now() - msgTime > 5 * 60 * 1000) {
+    console.log('⏭️ Skipped historical message:', msg.id?._serialized)
+    return
+  }
   try {
     // Ignore if patient is muted
     const sender = msg.from
@@ -679,4 +686,46 @@ client.on('message_create', async (msg) => {
   catch (err) { console.error('Error:', err) }
 })
 
-client.initialize()
+// Only initialize the WhatsApp client if not in TEST_MODE
+if (!process.env.TEST_MODE) {
+  client.initialize()
+}
+
+// 🧪 HTTP server for testing via curl
+const http = require('http')
+http.createServer(async (req, res) => {
+  if (req.method === 'POST' && req.url === '/test-message') {
+    let body = ''
+    req.on('data', chunk => body += chunk.toString())
+    req.on('end', async () => {
+      try {
+        const data = JSON.parse(body)
+        const mockMsg = {
+          from: data.from || 'test-user@c.us',
+          to: 'bot@c.us',
+          type: 'chat',
+          body: data.text || '',
+          fromMe: false,
+          id: { _serialized: `mock-${Date.now()}-${Math.random()}` },
+          timestamp: Math.floor(Date.now() / 1000),
+          reply: async (text) => {
+            console.log(`\n🤖 [BOT REPLY TO ${data.from || 'test-user@c.us'}]:\n${text}\n`)
+            return true
+          }
+        }
+        await handleMessage(mockMsg)
+        res.writeHead(200, { 'Content-Type': 'application/json' })
+        res.end(JSON.stringify({ status: 'ok', msg: 'Message processed' }))
+      } catch (err) {
+        res.writeHead(400)
+        res.end(JSON.stringify({ error: err.message }))
+      }
+    })
+  } else {
+    res.writeHead(404)
+    res.end()
+  }
+}).listen(3000, () => {
+  console.log('🧪 Test server running on http://localhost:3000')
+  console.log('👉 To test: curl -X POST http://localhost:3000/test-message -H "Content-Type: application/json" -d \'{"from":"201558533440@c.us", "text":"hi"}\'')
+})
