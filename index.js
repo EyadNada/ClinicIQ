@@ -36,6 +36,7 @@ const { Client, LocalAuth } = require('whatsapp-web.js')
 const qrcode = require('qrcode-terminal')
 const { saveBooking, checkSlot, cancelBooking, askCustomerService } = require('./notify')
 const { parsePhoneNumberFromString } = require('libphonenumber-js')
+const cron = require('node-cron')
 const processedMessageIds = new Set()
 const MAX_PROCESSED_IDS = 500
 
@@ -610,6 +611,8 @@ async function handleMessageInner(msg) {
       session.data.appointment = true
       session.data.bookedAt = bookedAt
       session.data.rowNumber = rowNumber
+      session.data.reminderPref = '2' // Default to 1 day before
+      session.data.reminderSent = false
       session.step = 'main_menu'
 
       console.log(`   At:      ${bookedAt}\n`)
@@ -691,6 +694,58 @@ if (!process.env.TEST_MODE) {
   client.initialize()
 }
 
+function checkReminders() {
+  console.log('⏰ Running reminder check...')
+  const now = Date.now()
+  let count = 0
+
+  for (const sender in sessions) {
+    const session = sessions[sender]
+    if (session.data && session.data.appointment && !session.data.reminderSent) {
+      const pref = session.data.reminderPref || '2' // Default 1 day
+      if (pref === '5') continue // Off
+
+      const [year, month, day] = session.data.day.split('-').map(Number)
+      const [hour, minute] = session.data.time.split(':').map(Number)
+      const appointmentDate = new Date(year, month - 1, day, hour, minute)
+      const diffHours = (appointmentDate.getTime() - now) / (1000 * 60 * 60)
+
+      if (diffHours < 0) continue // Past appointment
+
+      let shouldSend = false
+      if (pref === '1' && diffHours <= 48) shouldSend = true // 2 days
+      if (pref === '2' && diffHours <= 24) shouldSend = true // 1 day
+      if (pref === '3' && diffHours <= 6) shouldSend = true  // 6 hours
+      if (pref === '4' && diffHours <= 1) shouldSend = true  // 1 hour
+
+      // FOR TESTING: if TEST_MODE, always send if they have an active appointment to prove it works
+      if (process.env.TEST_MODE) {
+        shouldSend = true;
+      }
+
+      if (shouldSend) {
+        count++
+        const msgText = `⏰ *تذكير بموعدك!*\n\nمرحباً ${session.data.name}،\nنذكرك بموعدك للاستشارة (${session.data.service}) ${formatDateArabic(session.data.day)} الساعة ${formatTime12h(session.data.time)}.\n\nنتطلع لرؤيتك!`
+
+        session.data.reminderSent = true
+        saveSessions()
+
+        if (process.env.TEST_MODE) {
+          console.log(`\n🤖 [CRON MOCK SEND TO ${sender}]:\n${msgText}\n`)
+        } else {
+          client.sendMessage(sender, msgText).catch(err => console.error('❌ Failed reminder:', err.message))
+        }
+      }
+    }
+  }
+  console.log(`✅ Reminder check finished. Sent ${count} reminders.`)
+}
+
+// Run every 30 minutes in production
+if (!process.env.TEST_MODE) {
+  cron.schedule('*/30 * * * *', checkReminders)
+}
+
 // 🧪 HTTP server for testing via curl
 const http = require('http')
 http.createServer(async (req, res) => {
@@ -721,11 +776,16 @@ http.createServer(async (req, res) => {
         res.end(JSON.stringify({ error: err.message }))
       }
     })
+  } else if (req.method === 'POST' && req.url === '/test-reminders') {
+    checkReminders()
+    res.writeHead(200, { 'Content-Type': 'application/json' })
+    res.end(JSON.stringify({ status: 'ok', msg: 'Cron job ran successfully' }))
   } else {
     res.writeHead(404)
     res.end()
   }
 }).listen(3000, () => {
   console.log('🧪 Test server running on http://localhost:3000')
-  console.log('👉 To test: curl -X POST http://localhost:3000/test-message -H "Content-Type: application/json" -d \'{"from":"201558533440@c.us", "text":"hi"}\'')
+  console.log('👉 To test msg: curl -X POST http://localhost:3000/test-message -H "Content-Type: application/json" -d \'{"from":"201558533440@c.us", "text":"hi"}\'')
+  console.log('👉 To test cron: curl -X POST http://localhost:3000/test-reminders')
 })
