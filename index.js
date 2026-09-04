@@ -181,6 +181,7 @@ const MAIN_MENU = `🏥 *مرحبًا بك في MeroSculp* 🌷
 4️⃣ ❓ الأسئلة الشائعة
 5️⃣ 🗒️ موعدي
 6️⃣ 💬 الشكاوى والاستفسارات
+7️⃣ 🙋‍♂️ التواصل الفوري مع الأخصائي
 
 ✨ يرجى الرد برقم الخيار المطلوب، وسيتم خدمتك في أسرع وقت`
 
@@ -434,8 +435,23 @@ async function handleMessageInner(msg) {
       case '6':
         session.step = 'customer_service'
         return await msg.reply(CUSTOMER_SERVICE_INTRO)
+      case '7':
+        try {
+          const userPhone = sender.replace('@c.us', '');
+          const messageToSpecialist = `🚨 *طلب تواصل فوري*\n\nيوجد مريض يحتاج إلى مساعدة فورية.\nرقم المريض: +${userPhone}\n\nللتواصل معه مباشرة، اضغط على الرابط التالي:\nhttps://wa.me/${userPhone}`;
+
+          if (!process.env.TEST_MODE) {
+            await client.sendMessage('966594544343@c.us', messageToSpecialist);
+          }
+
+          session.step = 'main_menu';
+          return await msg.reply('✅ تم إرسال طلبك إلى الأخصائي بنجاح. سيتم التواصل معك في أقرب وقت ممكن.\n\n' + MAIN_MENU);
+        } catch (err) {
+          console.error('Error sending message to specialist:', err);
+          return await msg.reply('⚠️ حدث خطأ أثناء إرسال طلبك. يرجى المحاولة مرة أخرى لاحقاً.');
+        }
       default:
-        return await msg.reply(' ⚠️اختر رقم من ١ إلى ٦\n\n' + MAIN_MENU)
+        return await msg.reply(' ⚠️اختر رقم من ١ إلى ٧\n\n' + MAIN_MENU)
     }
   }
 
