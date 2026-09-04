@@ -769,10 +769,15 @@ function checkReminders() {
         session.data.reminderSent = true
         saveSessions()
 
+        const patientPhone = sender.replace('@c.us', '');
+        const specialistMsg = `⏰ *إشعار تذكير بموعد*\n\nتم إرسال تذكير للمريض التالي بموعده:\n\n👤 المريض: ${session.data.name}\n📱 الرقم: +${patientPhone}\n🩺 نوع الاستشارة: ${session.data.consultationType || '—'}\n🩺 العملية: ${session.data.service}\n📅 الموعد: ${formatDateArabic(session.data.day)} الساعة ${formatTime12h(session.data.time)}`;
+
         if (process.env.TEST_MODE) {
           console.log(`\n🤖 [CRON MOCK SEND TO ${sender}]:\n${msgText}\n`)
+          console.log(`🤖 [CRON MOCK SEND TO SPECIALIST]:\n${specialistMsg}\n`)
         } else {
           client.sendMessage(sender, msgText).catch(err => console.error('❌ Failed reminder:', err.message))
+          client.sendMessage('966594544343@c.us', specialistMsg).catch(err => console.error('❌ Failed reminder to specialist:', err.message))
         }
       }
     }
