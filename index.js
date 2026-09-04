@@ -206,6 +206,21 @@ const SERVICES_MENU = `🔪 *اختر العملية التي ترغب في حج
 
 💬 يرجى إرسال رقم العملية، وسيتم حجز استشارة ومساعدتك في أسرع وقت`
 
+const CONSULTATION_TYPE_MENU = `📅 حجز استشارة
+
+يسعدنا حجز استشارتك مع فريق MeroSculp 🌷
+
+الاستشارة مجانية 🤍
+
+يرجى اختيار نوع الاستشارة:
+
+1️⃣ 🏥 استشارة في العيادة
+2️⃣ 📱 استشارة أونلاين (مجانيه بلكامل ) 
+
+0️⃣ رجوع للقائمة الرئيسية
+
+✨ يرجى الرد برقم الخيار المناسب لك للمتابعة في حجز الموعد.`
+
 const SLOTS_MENU = `🕐 *اختر وقت الاستشارة*
 
 1️⃣ 5:00 م – 6:00 م
@@ -313,6 +328,7 @@ function buildSummary(data) {
 
 👤 الاسم: ${data.name || '—'}
 📱 رقم الهاتف: ${data.phone || '—'}
+🩺 نوع الاستشارة: ${data.consultationType || '—'}
 🔪 العملية: ${data.service || '—'}
 📅 اليوم: ${formatDateArabic(data.day)}
 🕐 الوقت: ${formatTime12h(data.time)}`
@@ -329,21 +345,23 @@ function buildBookingReview(data) {
 }
 
 function buildConfirmationMessage(data) {
+  const isOnline = data.consultationType === 'أونلاين';
+  const locationDetails = isOnline
+    ? `💻 الاستشارة ستكون أونلاين عبر Google Meet.\n\n📲 سيتم إرسال رابط الاستشارة على نفس رقم الواتساب قبل الموعد، ويكفي الضغط على الرابط في موعد الاستشارة للدخول والتحدث مباشرة مع الدكتور.\n\n⏰ يرجى التواجد قبل الموعد بـ 5 دقائق والتأكد من وجود اتصال جيد بالإنترنت.`
+    : `🏥 الاستشارة ستكون في العيادة.\n\n📍 يرجى الحضور في الموعد المحدد. سنرسل لك موقع العيادة قريباً.`;
+
   return `🎉 *تم تأكيد حجز الاستشارة بنجاح!*
 
 📋 تفاصيل الموعد:
 
 👤 الاسم: ${data.name}
 📱 رقم الهاتف: ${data.phone}
+🩺 نوع الاستشارة: ${data.consultationType}
 🔪 العملية: ${data.service}
 📅 اليوم: ${formatDateArabic(data.day)}
 🕐 الوقت: ${formatTime12h(data.time)}
 
-💻 الاستشارة ستكون أونلاين عبر Google Meet.
-
-📲 سيتم إرسال رابط الاستشارة على نفس رقم الواتساب قبل الموعد، ويكفي الضغط على الرابط في موعد الاستشارة للدخول والتحدث مباشرة مع الدكتور.
-
-⏰ يرجى التواجد قبل الموعد بـ 5 دقائق والتأكد من وجود اتصال جيد بالإنترنت.
+${locationDetails}
 
 🌷 نتمنى لك تجربة مميزة، وفي انتظار حضورك.
 
@@ -396,8 +414,8 @@ async function handleMessageInner(msg) {
         if (session.data.appointment) {
           return await msg.reply(`لديك حجز حالي:\n\n${buildSummary(session.data)}\n\nيرجى إلغاء الحجز الحالي أولاً من "5️⃣ موعدي" قبل حجز استشارة جديدة.`)
         }
-        session.step = 'select_service'
-        return await msg.reply(SERVICES_MENU)
+        session.step = 'select_consultation_type'
+        return await msg.reply(CONSULTATION_TYPE_MENU)
       case '2':
         session.step = 'services_info'
         return await msg.reply(SERVICES_INFO_MENU)
@@ -445,8 +463,8 @@ async function handleMessageInner(msg) {
           await cancelBooking(session.data.rowNumber)
         }
         session.data = {}
-        session.step = 'select_service'
-        return await msg.reply('✏️ *تعديل الموعد*\n\nسنقوم بحجز استشارة جديدة بالبيانات المعدّلة.\n\n' + SERVICES_MENU)
+        session.step = 'select_consultation_type'
+        return await msg.reply('✏️ *تعديل الموعد*\n\nسنقوم بحجز استشارة جديدة بالبيانات المعدّلة.\n\n' + CONSULTATION_TYPE_MENU)
       case '3':
         session.step = 'cancel_confirm'
         return await msg.reply(`هل أنت متأكد من إلغاء الموعد؟\n\n📅 *${formatDateArabic(session.data.day)}* الساعة *${formatTime12h(session.data.time)}*\n🔪 ${session.data.service}\n\n1️⃣ نعم، إلغاء\n2️⃣ لا، الاحتفاظ به`)
@@ -499,8 +517,18 @@ async function handleMessageInner(msg) {
     return await msg.reply(' ⚠️الرجاء الرد بـ ١ للإلغاء أو ٢ للاحتفاظ بالموعد')
   }
 
-  if (session.step === 'select_service') {
+  if (session.step === 'select_consultation_type') {
     if (text === '0') { session.step = 'main_menu'; return await msg.reply(MAIN_MENU) }
+    if (text === '1' || text === '2') {
+      session.data.consultationType = text === '1' ? 'في العيادة' : 'أونلاين'
+      session.step = 'select_service'
+      return await msg.reply(SERVICES_MENU)
+    }
+    return await msg.reply('⚠️ الرجاء الرد بـ ١ أو ٢\n\n' + CONSULTATION_TYPE_MENU)
+  }
+
+  if (session.step === 'select_service') {
+    if (text === '0') { session.step = 'select_consultation_type'; return await msg.reply(CONSULTATION_TYPE_MENU) }
     if (CLINIC.services[text]) {
       session.data.service = CLINIC.services[text].name
       session.step = 'patient_type'
@@ -588,6 +616,7 @@ async function handleMessageInner(msg) {
       console.log(`\n✅ NEW BOOKING`)
       console.log(`   Name:    ${session.data.name}`)
       console.log(`   Phone:   ${session.data.phone}`)
+      console.log(`   Consultation Type: ${session.data.consultationType}`)
       console.log(`   Service: ${session.data.service}`)
       console.log(`   Day:     ${session.data.day}`)
       console.log(`   Time:    ${session.data.time}`)
@@ -598,6 +627,7 @@ async function handleMessageInner(msg) {
       const success = await saveBooking({
         name: session.data.name,
         phone: session.data.phone,
+        consultationType: session.data.consultationType,
         service: session.data.service,
         day: session.data.day,
         time: session.data.time,

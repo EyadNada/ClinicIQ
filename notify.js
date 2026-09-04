@@ -44,6 +44,7 @@ async function saveBooking(data, rowNumber) {
       RowNumber: rowNumber,
       Name: data.name,
       Phone: data.phone,
+      ConsultationType: data.consultationType,
       Service: data.service,
       Day: data.day,
       Time: data.time,
