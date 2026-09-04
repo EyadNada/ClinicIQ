@@ -664,8 +664,10 @@ async function handleMessageInner(msg) {
     }
     return await msg.reply('⚠️الرجاء الرد بـ ١ للتأكيد أو ٢ لتعديل البيانات')
   }
-
-  return
+  // Fallback for deprecated or unknown states
+  resetSession(sender)
+  sessions[sender].step = 'main_menu'
+  return await msg.reply(MAIN_MENU)
 }
 
 client.on('qr', (qr) => {
