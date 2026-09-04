@@ -176,7 +176,7 @@ const MAIN_MENU = `🏥 *مرحبًا بك في MeroSculp* 🌷
 يرجى اختيار رقم من القائمة التالية:
 
 1️⃣ 📅 حجز استشارة مجانية اون لاين
-2️⃣ 🔪 الخدمات والعمليات
+2️⃣ 🩺 الخدمات والعمليات
 3️⃣ 🎉 العروض الحالية
 4️⃣ ❓ الأسئلة الشائعة
 5️⃣ 🗒️ موعدي
@@ -185,7 +185,7 @@ const MAIN_MENU = `🏥 *مرحبًا بك في MeroSculp* 🌷
 
 ✨ يرجى الرد برقم الخيار المطلوب، وسيتم خدمتك في أسرع وقت`
 
-const SERVICES_MENU = `🔪 *اختر العملية التي ترغب في حجز استشارة مجانية بشأنها*
+const SERVICES_MENU = `🩺 *اختر العملية التي ترغب في حجز استشارة مجانية بشأنها*
 
 يرجى الرد برقم العملية المطلوبة:
 
@@ -240,7 +240,7 @@ const PATIENT_TYPE_MENU = `🏥 *هل أنت*
 
 0️⃣ رجوع`
 
-const SERVICES_INFO_MENU = `🔪 *ما نقدمه في MeroSculp*
+const SERVICES_INFO_MENU = `🩺 *ما نقدمه في MeroSculp*
 
 في MeroSculp، يقدم الدكتور خدمات تجميلية متخصصة بأحدث التقنيات وأعلى معايير السلامة، مع متابعة كاملة قبل وبعد العملية.
 
@@ -330,7 +330,7 @@ function buildSummary(data) {
 👤 الاسم: ${data.name || '—'}
 📱 رقم الهاتف: ${data.phone || '—'}
 🩺 نوع الاستشارة: ${data.consultationType || '—'}
-🔪 العملية: ${data.service || '—'}
+🩺 العملية: ${data.service || '—'}
 📅 اليوم: ${formatDateArabic(data.day)}
 🕐 الوقت: ${formatTime12h(data.time)}`
 }
@@ -358,7 +358,7 @@ function buildConfirmationMessage(data) {
 👤 الاسم: ${data.name}
 📱 رقم الهاتف: ${data.phone}
 🩺 نوع الاستشارة: ${data.consultationType}
-🔪 العملية: ${data.service}
+🩺 العملية: ${data.service}
 📅 اليوم: ${formatDateArabic(data.day)}
 🕐 الوقت: ${formatTime12h(data.time)}
 
@@ -495,7 +495,7 @@ async function handleMessageInner(msg) {
         return await msg.reply('✏️ *تعديل الموعد*\n\nسنقوم بحجز استشارة جديدة بالبيانات المعدّلة.\n\n' + CONSULTATION_TYPE_MENU)
       case '3':
         session.step = 'cancel_confirm'
-        return await msg.reply(`هل أنت متأكد من إلغاء الموعد؟\n\n📅 *${formatDateArabic(session.data.day)}* الساعة *${formatTime12h(session.data.time)}*\n🔪 ${session.data.service}\n\n1️⃣ نعم، إلغاء\n2️⃣ لا، الاحتفاظ به`)
+        return await msg.reply(`هل أنت متأكد من إلغاء الموعد؟\n\n📅 *${formatDateArabic(session.data.day)}* الساعة *${formatTime12h(session.data.time)}*\n🩺 ${session.data.service}\n\n1️⃣ نعم، إلغاء\n2️⃣ لا، الاحتفاظ به`)
       case '4':
         session.step = 'reminder_menu'
         return await msg.reply(REMINDER_MENU)
@@ -712,13 +712,11 @@ client.on('message_create', async (msg) => {
       session.mutedUntil = Date.now() + (24 * 60 * 60 * 1000) // 24 hours
       saveSessions()
       console.log(`🔇 Muted bot for ${patientId}`)
-      await msg.reply('🔇 [System]: Bot paused for 24 hours for this patient.')
     } else if (text === '//resume' || text === '//unmute') {
       const session = getSession(patientId)
       session.mutedUntil = 0
       saveSessions()
       console.log(`🔊 Resumed bot for ${patientId}`)
-      await msg.reply('🔊 [System]: Bot resumed for this patient.')
     }
     return
   }
