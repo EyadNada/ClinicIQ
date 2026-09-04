@@ -94,7 +94,7 @@ async function cancelBooking(rowNumber) {
 
 async function askCustomerService(sender, question) {
   // Since n8n is removed, customer service fallback directly to front desk phone
-  return '⚠️ عذراً، لا يمكن معالجة الأسئلة حالياً. يرجى التواصل معنا مباشرة على +20 103 117 7998.'
+  return '⚠️ عذراً، لا يمكن معالجة الأسئلة حالياً. يرجى التواصل معنا مباشرة على +2001031177998.'
 }
 
 module.exports = { saveBooking, checkSlot, cancelBooking, askCustomerService }

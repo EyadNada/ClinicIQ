@@ -74,7 +74,7 @@ const client = new Client({
 
 const CLINIC = {
   name: 'MeroSculp',
-  phone: '+20 103 117 7998',
+  phone: '+2001031177998',
   services: {
     '1': { name: 'Rhinoplasty (Nose Job)' },
     '2': { name: 'Tummy Tuck' },
