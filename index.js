@@ -180,8 +180,7 @@ const MAIN_MENU = `🏥 *مرحبًا بك في MeroSculp* 🌷
 3️⃣ 🎉 العروض الحالية
 4️⃣ ❓ الأسئلة الشائعة
 5️⃣ 🗒️ موعدي
-6️⃣ 💬 الشكاوى والاستفسارات
-7️⃣ 🙋‍♂️ التواصل الفوري مع الأخصائي
+6️⃣ 🙋‍♂️ التواصل الفوري مع الأخصائي
 
 ✨ يرجى الرد برقم الخيار المطلوب، وسيتم خدمتك في أسرع وقت`
 
@@ -292,7 +291,6 @@ const MANAGE_MENU = `🗒️ *إدارة موعدي*
 2️⃣ ✏️ تعديل الموعد
 3️⃣ ❌ إلغاء الموعد
 4️⃣ ⏰ تذكيري بموعدي
-6️⃣ 📞 التواصل مع خدمة العملاء
 
 0️⃣ 🏠 القائمة الرئيسية
 
@@ -310,11 +308,7 @@ const REMINDER_MENU = `⏰ *تذكير بموعد الاستشارة*
 
 0️⃣ 🏠 القائمة الرئيسية`
 
-const CUSTOMER_SERVICE_INTRO = `💬 *الشكاوى والاستفسارات*
 
-اكتب سؤالك أو استفسارك وسنقوم بالرد عليك في أقرب وقت.
-
-0️⃣ رجوع للقائمة الرئيسية`
 
 const REMINDER_LABELS = {
   '1': 'قبل الموعد بيومين',
@@ -433,13 +427,10 @@ async function handleMessageInner(msg) {
         }
         return await msg.reply('🗒️ لا يوجد لديك موعد حالياً.\n\n' + MAIN_MENU)
       case '6':
-        session.step = 'customer_service'
-        return await msg.reply(CUSTOMER_SERVICE_INTRO)
-      case '7':
         session.step = 'enter_phone_specialist';
         return await msg.reply('📱 يرجى كتابة رقم هاتفك\n(لتأكيد الموعد)');
       default:
-        return await msg.reply(' ⚠️اختر رقم من ١ إلى ٧\n\n' + MAIN_MENU)
+        return await msg.reply(' ⚠️اختر رقم من ١ إلى ٦\n\n' + MAIN_MENU)
     }
   }
 
@@ -499,9 +490,7 @@ async function handleMessageInner(msg) {
       case '4':
         session.step = 'reminder_menu'
         return await msg.reply(REMINDER_MENU)
-      case '6':
-        session.step = 'customer_service'
-        return await msg.reply(CUSTOMER_SERVICE_INTRO)
+
       case '0':
         session.step = 'main_menu'
         return await msg.reply(MAIN_MENU)
@@ -520,14 +509,7 @@ async function handleMessageInner(msg) {
     return await msg.reply('⚠️ اختر رقم من ١ إلى ٥\n\n' + REMINDER_MENU)
   }
 
-  if (session.step === 'customer_service') {
-    if (text === '0' || text.toLowerCase() === 'back' || text === 'رجوع') {
-      session.step = 'main_menu'
-      return await msg.reply(MAIN_MENU)
-    }
-    const reply = await askCustomerService(sender, text)
-    return await msg.reply(reply + '\n\n_اكتب سؤالك التالي، أو 0️⃣ للرجوع للقائمة الرئيسية_')
-  }
+
 
   if (session.step === 'cancel_confirm') {
     if (text === '1') {
