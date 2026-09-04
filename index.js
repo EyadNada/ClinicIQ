@@ -436,22 +436,34 @@ async function handleMessageInner(msg) {
         session.step = 'customer_service'
         return await msg.reply(CUSTOMER_SERVICE_INTRO)
       case '7':
-        try {
-          const userPhone = sender.replace('@c.us', '');
-          const messageToSpecialist = `🚨 *طلب تواصل فوري*\n\nيوجد مريض يحتاج إلى مساعدة فورية.\nرقم المريض: +${userPhone}\n\nللتواصل معه مباشرة، اضغط على الرابط التالي:\nhttps://wa.me/${userPhone}`;
-
-          if (!process.env.TEST_MODE) {
-            await client.sendMessage('966594544343@c.us', messageToSpecialist);
-          }
-
-          session.step = 'main_menu';
-          return await msg.reply('✅ تم إرسال طلبك إلى الأخصائي بنجاح. سيتم التواصل معك في أقرب وقت ممكن.\n\n' + MAIN_MENU);
-        } catch (err) {
-          console.error('Error sending message to specialist:', err);
-          return await msg.reply('⚠️ حدث خطأ أثناء إرسال طلبك. يرجى المحاولة مرة أخرى لاحقاً.');
-        }
+        session.step = 'enter_phone_specialist';
+        return await msg.reply('📱 يرجى كتابة رقم هاتفك\n(لتأكيد الموعد)');
       default:
         return await msg.reply(' ⚠️اختر رقم من ١ إلى ٧\n\n' + MAIN_MENU)
+    }
+  }
+
+  if (session.step === 'enter_phone_specialist') {
+    if (text === '0') { session.step = 'main_menu'; return await msg.reply(MAIN_MENU) }
+
+    const phoneNumber = parsePhoneNumberFromString(text, 'EG')
+    if (!phoneNumber || !phoneNumber.isValid()) {
+      return await msg.reply('⚠️الرجاء إدخال رقم هاتف صحيح مع رمز الدولة\nExample | +201558766773 (Egypt), +966501234567 (Saudi), +971501234567 (UAE)')
+    }
+
+    try {
+      const formattedNumber = phoneNumber.number // e.g. +2010...
+      const messageToSpecialist = `🚨 *طلب تواصل فوري*\n\nيوجد مريض يحتاج إلى مساعدة فورية.\nرقم المريض للتواصل: ${formattedNumber}`;
+
+      if (!process.env.TEST_MODE) {
+        await client.sendMessage('966594544343@c.us', messageToSpecialist);
+      }
+
+      session.step = 'main_menu';
+      return await msg.reply('✅ تم إرسال طلبك إلى الأخصائي بنجاح. سيتم التواصل معك في أقرب وقت ممكن.\n\n' + MAIN_MENU);
+    } catch (err) {
+      console.error('Error sending message to specialist:', err);
+      return await msg.reply('⚠️ حدث خطأ أثناء إرسال طلبك. يرجى المحاولة مرة أخرى لاحقاً.');
     }
   }
 
