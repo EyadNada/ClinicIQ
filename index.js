@@ -83,7 +83,7 @@ const client = new Client({
     executablePath: process.platform === 'darwin' 
       ? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' 
       : '/usr/bin/chromium-browser',
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--disable-software-rasterizer', '--disable-webgl']
   },
   webVersionCache: {
     type: 'none'
