@@ -2,6 +2,18 @@ const fs = require('fs')
 const COUNTER_FILE = './bookingCount.json'
 const SESSIONS_FILE = './sessions.json'
 
+const logStream = fs.createWriteStream('./debug.log', {flags: 'a'});
+const originalLog = console.log;
+const originalError = console.error;
+console.log = function(...args) {
+  logStream.write(new Date().toISOString() + ' LOG: ' + args.join(' ') + '\n');
+  originalLog.apply(console, args);
+};
+console.error = function(...args) {
+  logStream.write(new Date().toISOString() + ' ERR: ' + args.join(' ') + '\n');
+  originalError.apply(console, args);
+};
+
 
 function getBookingCount() {
   if (fs.existsSync(COUNTER_FILE)) {
@@ -74,8 +86,7 @@ const client = new Client({
     args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
   },
   webVersionCache: {
-    type: 'remote',
-    remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.3000.1046905505-alpha.html'
+    type: 'none'
   }
 })
 
@@ -680,6 +691,10 @@ client.on('qr', (qr) => {
 })
 
 client.on('ready', () => console.log('✅ ClinicIQ is live!'))
+
+client.on('authenticated', (session) => {
+  console.log('✅ Authenticated successfully! (Waiting for ready...)')
+})
 
 client.on('disconnected', (reason) => {
   console.log('⚠️ Disconnected:', reason)
