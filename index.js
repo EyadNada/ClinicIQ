@@ -83,7 +83,15 @@ const client = new Client({
     executablePath: process.platform === 'darwin' 
       ? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' 
       : '/usr/bin/chromium-browser',
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--disable-software-rasterizer', '--disable-webgl']
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-gpu',
+      '--disable-software-rasterizer',
+      '--disable-webgl',
+      '--disable-blink-features=AutomationControlled'
+    ]
   },
   webVersionCache: {
     type: 'none'
@@ -395,6 +403,28 @@ async function handleMessageInner(msg) {
   if (msg.from.endsWith('@g.us')) return
   if (msg.from === 'status@broadcast') return
   if (msg.type !== 'chat') return
+
+  // Anti-ban measure: Override msg.reply to simulate human typing and add delay
+  if (typeof msg.reply === 'function' && !msg.isMock) {
+    const originalReply = msg.reply.bind(msg);
+    msg.reply = async (content) => {
+      try {
+        if (typeof msg.getChat === 'function') {
+          const chat = await msg.getChat();
+          if (chat && chat.sendStateTyping) await chat.sendStateTyping();
+          // Delay proportional to text length (approx 50ms per character), min 1s, max 4s
+          const textLength = typeof content === 'string' ? content.length : 20;
+          const delayMs = Math.min(Math.max(textLength * 50, 1000), 4000);
+          await new Promise(res => setTimeout(res, delayMs));
+          if (chat && chat.clearState) await chat.clearState();
+        }
+      } catch (e) {
+        console.error('Typing indicator error:', e.message);
+      }
+      return await originalReply(content);
+    };
+  }
+
   //console.log(' Incoming from:', msg.from)
 
   //TESTING MODE — commented out to allow all users
@@ -828,6 +858,7 @@ http.createServer(async (req, res) => {
           type: 'chat',
           body: data.text || '',
           fromMe: false,
+          isMock: true,
           id: { _serialized: `mock-${Date.now()}-${Math.random()}` },
           timestamp: Math.floor(Date.now() / 1000),
           reply: async (text) => {
