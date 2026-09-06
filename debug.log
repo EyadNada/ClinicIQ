@@ -1,0 +1,6 @@
+2026-09-05T22:48:36.818Z LOG: ◇ injected env (3) from .env [2m// tip: ◈ secrets for agents [www.dotenvx.com][0m
+2026-09-05T22:48:36.860Z LOG: 🧪 Test server running on http://localhost:3000
+2026-09-05T22:48:36.860Z LOG: 👉 To test msg: curl -X POST http://localhost:3000/test-message -H "Content-Type: application/json" -d '{"from":"201558533440@c.us", "text":"hi"}'
+2026-09-05T22:48:36.860Z LOG: 👉 To test cron: curl -X POST http://localhost:3000/test-reminders
+2026-09-05T22:48:47.305Z LOG: ⚠️ Disconnected: LOGOUT
+2026-09-05T22:48:47.562Z LOG: ⚠️ Disconnected: LOGOUT
